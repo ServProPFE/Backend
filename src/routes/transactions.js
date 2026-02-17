@@ -1,0 +1,13 @@
+const express = require("express");
+const { authenticate, authorizeRoles } = require("../middleware/auth");
+//Importer les fonctions du contrôleur
+const { listTransactions, createTransaction,updateTransaction,deleteTransaction } = require("../controllers/transactionsController");
+//Créer un routeur Express
+const router = express.Router();
+//Définir les routes pour les transactions
+router.get("/", authenticate, authorizeRoles("ADMIN"), listTransactions);
+router.post("/", authenticate, authorizeRoles("ADMIN"), createTransaction);
+router.put("/:id", authenticate, authorizeRoles("ADMIN"), updateTransaction);
+router.delete("/:id", authenticate, authorizeRoles("ADMIN"), deleteTransaction);
+//Exporter le routeur
+module.exports = router;

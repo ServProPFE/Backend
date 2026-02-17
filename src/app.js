@@ -21,6 +21,7 @@ const competencesRoutes = require("./routes/competences");
 const certificationsRoutes = require("./routes/certifications");
 const availabilityRoutes = require("./routes/availability");
 const notationsRoutes = require("./routes/notations");
+const transactionRoutes = require("./routes/transactions");
 
 //Créer une application Express
 const app = express();
@@ -47,6 +48,7 @@ app.use("/competences", competencesRoutes);
 app.use("/certifications", certificationsRoutes);
 app.use("/availability", availabilityRoutes);
 app.use("/notations", notationsRoutes);
+app.use("/transactions", transactionRoutes);
 
 //Configurer le middleware de gestion des erreurs
 app.use(errorHandler);
