@@ -1,2 +1,374 @@
-# Backend
-This is a backend repository for my end-of-studies project named ServPro,it's a platform for reserving plumbing services,painting services &amp; etc...
+# ServPro Backend
+
+Backend API for ServPro - an on-demand services platform connecting clients with service providers (plumbing, electrical, cleaning, HVAC, etc.).
+
+## 📋 Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [API Documentation](#api-documentation)
+- [Authentication & Authorization](#authentication--authorization)
+- [Database Models](#database-models)
+- [Development](#development)
+- [Scripts](#scripts)
+
+## ✨ Features
+
+- **User Management**: CLIENT, PROVIDER, and ADMIN roles with JWT authentication
+- **Service Management**: Create, update, list, and delete services with pricing and categories
+- **Booking System**: Complete reservation flow with status tracking
+- **Payment Integration**: Transaction management with multiple payment methods
+- **Review System**: Ratings and comments for service providers
+- **Provider Profiles**: Portfolio, certifications, competences, and availability management
+- **Real-time Tracking**: Track service provider location and booking status
+- **Offers & Packages**: Promotional offers and subscription packages
+- **Invoice & Commission**: Automated financial document generation and commission calculation
+- **Notifications**: Multi-channel notification system (Email, Push, In-App)
+
+## 🛠 Tech Stack
+
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT (JSON Web Tokens) with bcryptjs
+- **API Design**: RESTful architecture
+- **Logging**: Morgan
+- **Security**: CORS enabled, password hashing
+
+## 📁 Project Structure
+
+```
+ServProBackend/
+├── src/
+│   ├── config/          # Database configuration
+│   ├── controllers/     # Request handlers
+│   ├── middleware/      # Auth, error handling
+│   ├── models/          # Mongoose schemas
+│   ├── routes/          # API routes
+│   ├── utils/           # Helper functions
+│   ├── app.js           # Express app setup
+│   └── server.js        # Server entry point
+├── .env.example         # Environment variables template
+├── package.json         # Dependencies
+└── README.md
+```
+
+## 🚀 Installation
+
+### Prerequisites
+
+- Node.js >= 16.x
+- MongoDB >= 5.x (local or MongoDB Atlas)
+- npm or yarn
+
+### Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ServProBackend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and configure your settings (see [Configuration](#configuration)).
+
+4. **Start MongoDB** (if running locally)
+   ```bash
+   mongod
+   ```
+
+5. **Run the server**
+   ```bash
+   npm start        # Production
+   npm run dev      # Development with nodemon
+   ```
+
+## ⚙️ Configuration
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+PORT=4000
+MONGODB_URI=mongodb://localhost:27017/servpro
+NODE_ENV=development
+JWT_SECRET=your_super_secret_key_change_this
+JWT_EXPIRES_IN=7d
+```
+
+### Environment Variables
+
+| Variable        | Description                          | Default                           |
+|----------------|--------------------------------------|-----------------------------------|
+| `PORT`         | Server port                          | `4000`                            |
+| `MONGODB_URI`  | MongoDB connection string            | `mongodb://localhost:27017/servpro` |
+| `NODE_ENV`     | Environment (development/production) | `development`                     |
+| `JWT_SECRET`   | Secret key for JWT signing           | *Required*                        |
+| `JWT_EXPIRES_IN` | Token expiration time              | `7d`                              |
+
+## 📚 API Documentation
+
+### Base URL
+```
+http://localhost:4000
+```
+
+### Authentication Endpoints
+
+#### Register
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "type": "CLIENT | PROVIDER | ADMIN",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+21612345678",
+  "password": "securePassword123"
+}
+```
+
+#### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "type": "CLIENT",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+### Protected Endpoints
+
+All protected endpoints require an `Authorization` header:
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+### Services
+
+| Method | Endpoint          | Auth Required | Roles                  | Description          |
+|--------|-------------------|---------------|------------------------|----------------------|
+| GET    | `/services`       | No            | Public                 | List all services    |
+| POST   | `/services`       | Yes           | PROVIDER, ADMIN        | Create service       |
+| PUT    | `/services/:id`   | Yes           | PROVIDER, ADMIN        | Update service       |
+| DELETE | `/services/:id`   | Yes           | PROVIDER, ADMIN        | Delete service       |
+
+### Bookings
+
+| Method | Endpoint              | Auth Required | Roles                  | Description             |
+|--------|-----------------------|---------------|------------------------|-------------------------|
+| GET    | `/bookings`           | Yes           | CLIENT, PROVIDER, ADMIN| List bookings           |
+| POST   | `/bookings`           | Yes           | CLIENT                 | Create booking          |
+| PATCH  | `/bookings/:id/status`| Yes           | PROVIDER, ADMIN        | Update booking status   |
+| DELETE | `/bookings/:id`       | Yes           | CLIENT, ADMIN          | Delete booking          |
+
+### Reviews
+
+| Method | Endpoint                   | Auth Required | Roles          | Description                 |
+|--------|----------------------------|---------------|----------------|-----------------------------|
+| GET    | `/reviews`                 | No            | Public         | List all reviews            |
+| GET    | `/reviews/provider/:id`    | No            | Public         | Provider reviews            |
+| GET    | `/reviews/client/:id`      | Yes           | CLIENT, ADMIN  | Client reviews              |
+| POST   | `/reviews`                 | Yes           | CLIENT         | Create review               |
+| PUT    | `/reviews/:id`             | Yes           | CLIENT, ADMIN  | Update review               |
+| DELETE | `/reviews/:id`             | Yes           | CLIENT, ADMIN  | Delete review               |
+
+### Offers
+
+| Method | Endpoint        | Auth Required | Roles           | Description      |
+|--------|-----------------|---------------|-----------------|------------------|
+| GET    | `/offers`       | No            | Public          | List offers      |
+| POST   | `/offers`       | Yes           | PROVIDER, ADMIN | Create offer     |
+| PUT    | `/offers/:id`   | Yes           | PROVIDER, ADMIN | Update offer     |
+| DELETE | `/offers/:id`   | Yes           | PROVIDER, ADMIN | Delete offer     |
+
+### Packages (Admin Only)
+
+| Method | Endpoint         | Auth Required | Roles | Description       |
+|--------|------------------|---------------|-------|-------------------|
+| GET    | `/packages`      | No            | Public| List packages     |
+| POST   | `/packages`      | Yes           | ADMIN | Create package    |
+| PUT    | `/packages/:id`  | Yes           | ADMIN | Update package    |
+| DELETE | `/packages/:id`  | Yes           | ADMIN | Delete package    |
+
+### Additional Resources
+
+- **Portfolios**: `/portfolios` - Provider work showcase
+- **Competences**: `/competences` - Provider skills & expertise
+- **Certifications**: `/certifications` - Provider certifications
+- **Availability**: `/availability` - Provider schedule
+- **Tracking**: `/tracking` - Real-time booking tracking
+- **Invoices**: `/invoices` - Transaction invoices (ADMIN only)
+- **Commissions**: `/commissions` - Platform commissions (ADMIN only)
+- **Notations**: `/notations` - Provider ratings (ADMIN only)
+- **Reservation Details**: `/reservation-details` - Booking details
+
+## 🔐 Authentication & Authorization
+
+### JWT Token
+
+All protected routes require a valid JWT token in the Authorization header:
+```
+Authorization: Bearer <token>
+```
+
+### Role-Based Access Control (RBAC)
+
+The system implements three user types with specific permissions:
+
+#### CLIENT
+- Create bookings and reservation details
+- Submit reviews
+- View services, offers, and provider information
+- Manage own profile
+
+#### PROVIDER
+- Manage services and offers
+- Update booking status
+- Create tracking updates
+- Manage portfolio, certifications, competences, and availability
+- View bookings assigned to them
+
+#### ADMIN
+- Full system access
+- Manage invoices, commissions, packages, and notations
+- Delete/modify any resource
+- View all system data
+
+## 🗄️ Database Models
+
+### Core Entities
+
+1. **User** - User accounts with role-based profiles
+2. **Service** - Service offerings with pricing
+3. **Booking** - Reservation records with status tracking
+4. **Transaction** - Payment processing records
+5. **Review** - Customer feedback and ratings
+6. **Notification** - System notifications
+
+### Provider Profile Entities
+
+7. **Portfolio** - Provider work samples
+8. **Competence** - Service expertise levels
+9. **Certification** - Professional certifications
+10. **Availability** - Provider schedule
+11. **Notation** - Aggregate ratings
+
+### Business Entities
+
+12. **Offer** - Promotional offers
+13. **Package** - Subscription plans
+14. **Invoice** - Payment invoices
+15. **Commission** - Platform fees
+16. **ReservationDetail** - Booking details
+17. **Tracking** - Service tracking logs
+
+## 💻 Development
+
+### Running in Development Mode
+
+```bash
+npm run dev
+```
+
+This starts the server with nodemon for auto-reload on file changes.
+
+### API Testing
+
+Use tools like:
+- **Postman** - Import the collection (coming soon)
+- **Thunder Client** (VS Code extension)
+- **curl** or **httpie**
+
+### Example Request with curl
+
+```bash
+# Register a new user
+curl -X POST http://localhost:4000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "CLIENT",
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+
+# Login
+curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+
+# List services (public)
+curl http://localhost:4000/services
+
+# Create booking (protected - requires token)
+curl -X POST http://localhost:4000/bookings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "client": "userId",
+    "provider": "providerId",
+    "service": "serviceId",
+    "expectedAt": "2026-03-15T10:00:00Z",
+    "totalPrice": 150,
+    "currency": "TND",
+    "detail": "detailId"
+  }'
+```
+
+## 📜 Scripts
+
+| Command          | Description                              |
+|------------------|------------------------------------------|
+| `npm start`      | Start production server                  |
+| `npm run dev`    | Start development server with nodemon    |
+| `npm test`       | Run tests (not yet implemented)          |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+ISC
+
+## 👥 Contact
+
+For questions or support, please contact the development team.
+
+---
+
+**Note**: This is an academic project developed as part of an end-of-studies project.
