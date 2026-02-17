@@ -1,5 +1,7 @@
+//Importer Mongoose pour définir le schéma des utilisateurs
 const mongoose = require("mongoose");
 
+//Définir le schéma des utilisateurs pour les clients, prestataires de services et administrateurs
 const userSchema = new mongoose.Schema(
   {
     type: {
@@ -32,6 +34,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//Créer le modèle d'utilisateur à partir du schéma
 const User = mongoose.model("User", userSchema);
 
+//Exporter le modèle d'utilisateur pour l'utiliser dans d'autres parties de l'application
 module.exports = { User };

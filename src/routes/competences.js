@@ -13,5 +13,6 @@ router.get("/", authenticate, authorizeRoles("CLIENT", "PROVIDER", "ADMIN"), lis
 router.post("/", authenticate, authorizeRoles("PROVIDER", "ADMIN"), createCompetence);
 router.put("/:id", authenticate, authorizeRoles("PROVIDER", "ADMIN"), updateCompetence);
 router.delete("/:id", authenticate, authorizeRoles("PROVIDER", "ADMIN"), deleteCompetence);
+
 //Exporter le routeur
 module.exports = router;

@@ -13,5 +13,6 @@ router.post("/", authenticate, authorizeRoles("CLIENT"), createBooking);
 router.patch("/:id/status", authenticate, authorizeRoles("PROVIDER", "ADMIN"), updateBookingStatus);
 router.delete("/:id", authenticate, authorizeRoles("CLIENT", "ADMIN"), deleteBooking);
 router.get("/", authenticate, authorizeRoles("CLIENT", "PROVIDER", "ADMIN"), listBookings);
+
 //Exporter le routeur
 module.exports = router;

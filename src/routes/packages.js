@@ -13,5 +13,6 @@ router.get("/", listPackages);
 router.post("/", authenticate, authorizeRoles("ADMIN"), createPackage);
 router.put("/:id", authenticate, authorizeRoles("ADMIN"), updatePackage);
 router.delete("/:id", authenticate, authorizeRoles("ADMIN"), deletePackage);
+
 //Exporter le routeur
 module.exports = router;

@@ -1,5 +1,7 @@
+//Importer Mongoose pour définir le schéma de réservation
 const mongoose = require("mongoose");
 
+//Définir le schéma de réservation pour les clients et les prestataires de services
 const bookingSchema = new mongoose.Schema(
   {
     client: {
@@ -35,6 +37,8 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//Créer le modèle de réservation à partir du schéma
 const Booking = mongoose.model("Booking", bookingSchema);
 
+//Exporter le modèle de réservation pour l'utiliser dans d'autres parties de l'application
 module.exports = { Booking };

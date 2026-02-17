@@ -15,5 +15,6 @@ router.get("/client/:clientId", authenticate, authorizeRoles("CLIENT", "ADMIN"),
 router.get("/", listReviews);
 router.put("/:id", authenticate, authorizeRoles("CLIENT", "ADMIN"), updateReview);
 router.delete("/:id", authenticate, authorizeRoles("CLIENT", "ADMIN"), deleteReview);
+
 //Exporter le routeur
 module.exports = router;

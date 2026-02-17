@@ -13,5 +13,6 @@ router.get("/", authenticate, authorizeRoles("ADMIN"), listInvoices);
 router.post("/", authenticate, authorizeRoles("ADMIN"), createInvoice);
 router.put("/:id", authenticate, authorizeRoles("ADMIN"), updateInvoice);
 router.delete("/:id", authenticate, authorizeRoles("ADMIN"), deleteInvoice);
+
 //Exporter le routeur
 module.exports = router;

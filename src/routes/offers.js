@@ -13,5 +13,6 @@ router.get("/", listOffers);
 router.post("/", authenticate, authorizeRoles("PROVIDER", "ADMIN"), createOffer);
 router.put("/:id", authenticate, authorizeRoles("PROVIDER", "ADMIN"), updateOffer);
 router.delete("/:id", authenticate, authorizeRoles("PROVIDER", "ADMIN"), deleteOffer);
+
 //Exporter le routeur
 module.exports = router;

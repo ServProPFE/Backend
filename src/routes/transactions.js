@@ -14,5 +14,6 @@ router.get("/", authenticate, authorizeRoles("ADMIN"), listTransactions);
 router.post("/", authenticate, authorizeRoles("ADMIN"), createTransaction);
 router.put("/:id", authenticate, authorizeRoles("ADMIN"), updateTransactionStatus);
 router.delete("/:id", authenticate, authorizeRoles("ADMIN"), deleteTransaction);
+
 //Exporter le routeur
 module.exports = router;

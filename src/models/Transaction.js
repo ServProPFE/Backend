@@ -1,5 +1,7 @@
+//Importer Mongoose pour définir le schéma des transactions
 const mongoose = require("mongoose");
 
+//Définir le schéma des transactions pour les réservations de services
 const transactionSchema = new mongoose.Schema(
   {
     booking: {
@@ -28,6 +30,8 @@ const transactionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//Créer le modèle de transaction à partir du schéma
 const Transaction = mongoose.model("Transaction", transactionSchema);
 
+//Exporter le modèle de transaction pour l'utiliser dans d'autres parties de l'application
 module.exports = { Transaction };
