@@ -1,0 +1,75 @@
+//Importer les modeles et les utilitaires nécessaires
+const { Service } = require("../models/Service");
+const { asyncHandler } = require("../utils/asyncHandler");
+
+//Lister les services avec des filtres optionnels
+const listServices = asyncHandler(async (req, res) => {
+  const { category, providerId } = req.query;
+  const query = {};
+
+  if (category) {
+    query.category = category;
+  }
+
+  if (providerId) {
+    query.provider = providerId;
+  }
+
+  const services = await Service.find(query).sort({ createdAt: -1 }).lean();
+
+  res.json({ items: services });
+});
+
+//Créer un nouveau service
+const createService = asyncHandler(async (req, res) => {
+  const {
+    provider,
+    name,
+    category,
+    priceMin,
+    priceMax,
+    duration,
+    currency,
+  } = req.body;
+
+  const service = await Service.create({
+    provider,
+    name,
+    category,
+    priceMin,
+    priceMax,
+    duration,
+    currency,
+  });
+
+  res.status(201).json(service);
+});
+
+//Mettre à jour un service
+const updateService = asyncHandler(async (req, res) => {
+  const { name, category, priceMin, priceMax, duration, currency } = req.body;
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    throw error;
+  }
+    Object.assign(service, { name, category, priceMin, priceMax, duration, currency });
+    await service.save();
+    res.json(service);
+});
+
+//Supprimer un service
+const deleteService = asyncHandler(async (req, res) => {
+  const service = await Service.findById(req.params.id);
+    if (!service) {
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    throw error;
+  }
+    await service.remove();
+    res.json({ message: "Service deleted" });
+});
+
+//Exporter les fonctions du contrôleur
+module.exports = { listServices, createService, updateService, deleteService };
