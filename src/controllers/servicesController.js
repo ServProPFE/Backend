@@ -50,10 +50,10 @@ const updateService = asyncHandler(async (req, res) => {
   const { name, category, priceMin, priceMax, duration, currency } = req.body;
     const service = await Service.findById(req.params.id);
     if (!service) {
-    const error = new Error("Service not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Service not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(service, { name, category, priceMin, priceMax, duration, currency });
     await service.save();
     res.json(service);

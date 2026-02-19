@@ -30,10 +30,10 @@ const updateAvailability = asyncHandler(async (req, res) => {
   const { day, start, end } = req.body;
   const availability = await Availability.findById(req.params.id);
     if (!availability) {
-    const error = new Error("Availability not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Availability not found");
+      error.statusCode = 404;
+      throw error;
+    }
   Object.assign(availability, { day, start, end });
   await availability.save();
   res.json(availability);

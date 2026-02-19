@@ -30,10 +30,10 @@ const updateTracking = asyncHandler(async (req, res) => {
   const { position, at } = req.body;
     const tracking = await Tracking.findById(req.params.id);
     if (!tracking) {
-    const error = new Error("Tracking not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Tracking not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(tracking, { position, at });
     await tracking.save();
     res.json(tracking);
@@ -43,10 +43,10 @@ const updateTracking = asyncHandler(async (req, res) => {
 const deleteTracking = asyncHandler(async (req, res) => {
   const tracking = await Tracking.findById(req.params.id);
     if (!tracking) {
-    const error = new Error("Tracking not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Tracking not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await tracking.remove();
     res.json({ message: "Tracking deleted" });
 });

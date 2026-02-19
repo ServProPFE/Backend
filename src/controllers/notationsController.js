@@ -29,10 +29,10 @@ const createNotation = asyncHandler(async (req, res) => {
 const deleteNotation = asyncHandler(async (req, res) => {
   const notation = await Notation.findById(req.params.id);
     if (!notation) {
-    const error = new Error("Notation not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Notation not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await notation.remove();
     res.json({ message: "Notation deleted" });
 });

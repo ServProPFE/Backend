@@ -30,10 +30,10 @@ const updateInvoice = asyncHandler(async (req, res) => {
   const { number, total, issuedAt } = req.body;
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
-    const error = new Error("Invoice not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Invoice not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(invoice, { number, total, issuedAt });
     await invoice.save();
     res.json(invoice);
@@ -43,10 +43,10 @@ const updateInvoice = asyncHandler(async (req, res) => {
 const deleteInvoice = asyncHandler(async (req, res) => {
   const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
-    const error = new Error("Invoice not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Invoice not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await invoice.remove();
     res.json({ message: "Invoice deleted" });
 });

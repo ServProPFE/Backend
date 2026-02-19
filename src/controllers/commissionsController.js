@@ -30,10 +30,10 @@ const updateCommission = asyncHandler(async (req, res) => {
   const { percentage, amount } = req.body;
     const commission = await Commission.findById(req.params.id);
     if (!commission) {
-    const error = new Error("Commission not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Commission not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(commission, { percentage, amount });
     await commission.save();
     res.json(commission);
@@ -42,10 +42,10 @@ const updateCommission = asyncHandler(async (req, res) => {
 //Supprimer une commission
 const deleteCommission = asyncHandler(async (req, res) => {  const commission = await Commission.findById(req.params.id);
     if (!commission) {
-    const error = new Error("Commission not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Commission not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await commission.remove();
     res.json({ message: "Commission deleted" });
 });

@@ -23,10 +23,10 @@ const updatePackage = asyncHandler(async (req, res) => {
   const { name, months, numberVisits, monthlyPrice } = req.body;
     const pack = await Package.findById(req.params.id);
     if (!pack) {
-    const error = new Error("Package not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Package not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(pack, { name, months, numberVisits, monthlyPrice });
     await pack.save();
     res.json(pack);
@@ -36,10 +36,10 @@ const updatePackage = asyncHandler(async (req, res) => {
 const deletePackage = asyncHandler(async (req, res) => {
   const pack = await Package.findById(req.params.id);
     if (!pack) {
-    const error = new Error("Package not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Package not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await pack.remove();
     res.json({ message: "Package deleted" });
 });

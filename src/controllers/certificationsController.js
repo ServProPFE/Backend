@@ -35,10 +35,10 @@ const updateCertification = asyncHandler(async (req, res) => {
   const { name, authority, expiresAt } = req.body;
     const certification = await Certification.findById(req.params.id);
     if (!certification) {
-    const error = new Error("Certification not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Certification not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(certification, { name, authority, expiresAt });
     await certification.save();
     res.json(certification);

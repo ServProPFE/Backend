@@ -34,10 +34,10 @@ const listReviewsByClient = asyncHandler(async (req, res) => {
 const deleteReview = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id);
     if (!review) {
-    const error = new Error("Review not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Review not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await review.remove();
     res.json({ message: "Review deleted" });
 });
@@ -47,10 +47,10 @@ const updateReview = asyncHandler(async (req, res) => {
   const { score, comment } = req.body;
     const review = await Review.findById(req.params.id);
     if (!review) {
-    const error = new Error("Review not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Review not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(review, { score, comment });
     await review.save();
     res.json(review);

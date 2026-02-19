@@ -18,10 +18,10 @@ const updateTransactionStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
-    const error = new Error("Transaction not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Transaction not found");
+      error.statusCode = 404;
+      throw error;
+    }
     transaction.status = status;
     await transaction.save();
     res.json(transaction);
@@ -31,10 +31,10 @@ const updateTransactionStatus = asyncHandler(async (req, res) => {
 const deleteTransaction = asyncHandler(async (req, res) => {
   const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
-    const error = new Error("Transaction not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Transaction not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await transaction.remove();
     res.json({ message: "Transaction deleted" });
 });

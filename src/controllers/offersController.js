@@ -41,10 +41,10 @@ const updateOffer = asyncHandler(async (req, res) => {
   const { title, basePrice, discount, validUntil, active } = req.body;
     const offer = await Offer.findById(req.params.id);
     if (!offer) {
-    const error = new Error("Offer not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Offer not found");
+      error.statusCode = 404;
+      throw error;
+    }
     Object.assign(offer, { title, basePrice, discount, validUntil, active });
     await offer.save();
     res.json(offer);

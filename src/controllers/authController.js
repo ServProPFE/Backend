@@ -52,14 +52,8 @@ const login = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email });
-  if (!user) {
-    const error = new Error("Invalid credentials");
-    error.statusCode = 401;
-    throw error;
-  }
-
   const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) {
+  if (!user || !ok) {
     const error = new Error("Invalid credentials");
     error.statusCode = 401;
     throw error;

@@ -29,10 +29,10 @@ const createPortfolio = asyncHandler(async (req, res) => {
 const deletePortfolio = asyncHandler(async (req, res) => {
   const portfolio = await Portfolio.findById(req.params.id);
     if (!portfolio) {
-    const error = new Error("Portfolio not found");
-    error.statusCode = 404;
-    throw error;
-  }
+      const error = new Error("Portfolio not found");
+      error.statusCode = 404;
+      throw error;
+    }
     await portfolio.remove();
     res.json({ message: "Portfolio deleted" });
 });
