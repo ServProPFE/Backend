@@ -11,7 +11,12 @@ const listCommissions = asyncHandler(async (req, res) => {
     query.booking = bookingId;
   }
 
-  const commissions = await Commission.find(query).sort({ createdAt: -1 }).lean();
+  const commissions = await Commission.find(query)
+    .populate('booking', 'client provider totalPrice')
+    .populate('booking.client', 'name email')
+    .populate('booking.provider', 'name email')
+    .sort({ createdAt: -1 })
+    .lean();
 
   res.json({ items: commissions });
 });

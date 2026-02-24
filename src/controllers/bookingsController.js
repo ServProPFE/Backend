@@ -34,7 +34,10 @@ const createBooking = asyncHandler(async (req, res) => {
 //Mettre à jour le statut d'une réservation
 const updateBookingStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
-  const booking = await Booking.findById(req.params.id);
+  const booking = await Booking.findById(req.params.id)
+    .populate('client', 'name email phone')
+    .populate('service', 'name')
+    .populate('provider', 'name');
 
   if (!booking) {
     const error = new Error("Booking not found");
@@ -76,14 +79,23 @@ const listBookings = asyncHandler(async (req, res) => {
     query.status = status;
   }
 
-  const bookings = await Booking.find(query).sort({ createdAt: -1 }).lean();
+  const bookings = await Booking.find(query)
+    .populate('client', 'name email phone')
+    .populate('service', 'name')
+    .populate('provider', 'name')
+    .sort({ createdAt: -1 })
+    .lean();
 
   res.json({ items: bookings });
 });
 
 //Lister une réservation par ID
 const getBookingById = asyncHandler(async (req, res) => {
-  const booking = await Booking.findById(req.params.id).lean();
+  const booking = await Booking.findById(req.params.id)
+    .populate('client', 'name email phone')
+    .populate('service', 'name')
+    .populate('provider', 'name')
+    .lean();
   if (!booking) {
     const error = new Error("Booking not found");
     error.statusCode = 404;

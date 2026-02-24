@@ -85,7 +85,14 @@ const listReviews = asyncHandler(async (req, res) => {
     query.reservation = { $in: bookingIds };
   }
 
-  const reviews = await Review.find(query).sort({ createdAt: -1 }).lean();
+  const reviews = await Review.find(query)
+    .populate('reservation', 'service client')
+    .populate('reservation.service', 'name')
+    .populate('reviewer', 'name email')
+    .populate('provider', 'name email')
+    .sort({ createdAt: -1 })
+    .lean();
+  
   res.json({ items: reviews });
 });
 
