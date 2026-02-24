@@ -16,6 +16,17 @@ const listNotations = asyncHandler(async (req, res) => {
   res.json({ items: notations });
 });
 
+//Obtenir une notation par ID
+const getNotationById = asyncHandler(async (req, res) => {
+  const notation = await Notation.findById(req.params.id).lean();
+  if (!notation) {
+    const error = new Error("Notation not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(notation);
+});
+
 //Créer une notation
 const createNotation = asyncHandler(async (req, res) => {
   const { average, total, provider } = req.body;
@@ -52,4 +63,4 @@ const updateNotation = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listNotations, createNotation, updateNotation, deleteNotation };
+module.exports = { listNotations, createNotation, updateNotation, deleteNotation, getNotationById };

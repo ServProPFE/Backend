@@ -16,6 +16,17 @@ const listCommissions = asyncHandler(async (req, res) => {
   res.json({ items: commissions });
 });
 
+//Obtenir une commission par ID
+const getCommissionById = asyncHandler(async (req, res) => {
+  const commission = await Commission.findById(req.params.id).lean();
+  if (!commission) {
+    const error = new Error("Commission not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(commission);
+});
+
 //Créer une nouvelle commission
 const createCommission = asyncHandler(async (req, res) => {
   const { percentage, amount, booking } = req.body;
@@ -51,4 +62,4 @@ const deleteCommission = asyncHandler(async (req, res) => {  const commission = 
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listCommissions, createCommission, updateCommission, deleteCommission };
+module.exports = { listCommissions, createCommission, updateCommission, deleteCommission, getCommissionById };

@@ -16,6 +16,17 @@ const listAvailability = asyncHandler(async (req, res) => {
   res.json({ items: availability });
 });
 
+//Obtenir une disponibilite par ID
+const getAvailabilityById = asyncHandler(async (req, res) => {
+  const availability = await Availability.findById(req.params.id).lean();
+  if (!availability) {
+    const error = new Error("Availability not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(availability);
+});
+
 //Créer une disponibilite
 const createAvailability = asyncHandler(async (req, res) => {
   const { day, start, end, provider } = req.body;
@@ -52,4 +63,4 @@ const deleteAvailability = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listAvailability, createAvailability, updateAvailability, deleteAvailability };
+module.exports = { listAvailability, createAvailability, updateAvailability, deleteAvailability, getAvailabilityById };

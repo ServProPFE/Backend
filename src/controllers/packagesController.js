@@ -9,6 +9,17 @@ const listPackages = asyncHandler(async (req, res) => {
   res.json({ items: packages });
 });
 
+//Obtenir un forfait par ID
+const getPackageById = asyncHandler(async (req, res) => {
+  const pack = await Package.findById(req.params.id).lean();
+  if (!pack) {
+    const error = new Error("Package not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(pack);
+});
+
 //Créer un nouveau forfait
 const createPackage = asyncHandler(async (req, res) => {
   const { name, months, numberVisits, monthlyPrice } = req.body;
@@ -45,4 +56,4 @@ const deletePackage = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listPackages, createPackage, updatePackage, deletePackage };
+module.exports = { listPackages, createPackage, updatePackage, deletePackage, getPackageById };

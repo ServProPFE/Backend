@@ -16,6 +16,17 @@ const listPortfolios = asyncHandler(async (req, res) => {
   res.json({ items: portfolios });
 });
 
+//Obtenir un portfolio par ID
+const getPortfolioById = asyncHandler(async (req, res) => {
+  const portfolio = await Portfolio.findById(req.params.id).lean();
+  if (!portfolio) {
+    const error = new Error("Portfolio not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(portfolio);
+});
+
 //Créer un portfolio
 const createPortfolio = asyncHandler(async (req, res) => {
   const { title, images, description, provider } = req.body;
@@ -52,4 +63,4 @@ const updatePortfolio = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listPortfolios, createPortfolio, deletePortfolio, updatePortfolio };
+module.exports = { listPortfolios, createPortfolio, deletePortfolio, updatePortfolio, getPortfolioById };

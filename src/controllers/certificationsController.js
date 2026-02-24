@@ -56,5 +56,16 @@ const deleteCertification = asyncHandler(async (req, res) => {
     res.json({ message: "Certification deleted" });
 });
 
+//Obtenir une certification par ID
+const getCertificationById = asyncHandler(async (req, res) => {
+  const certification = await Certification.findById(req.params.id).lean();
+  if (!certification) {
+    const error = new Error("Certification not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(certification);
+});
+
 //Exporter les fonctions du contrôleur
-module.exports = { listCertifications, createCertification, updateCertification, deleteCertification };
+module.exports = { listCertifications, createCertification, updateCertification, deleteCertification, getCertificationById };

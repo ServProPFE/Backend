@@ -20,6 +20,17 @@ const listOffers = asyncHandler(async (req, res) => {
   res.json({ items: offers });
 });
 
+//Obtenir une offre par ID
+const getOfferById = asyncHandler(async (req, res) => {
+  const offer = await Offer.findById(req.params.id).lean();
+  if (!offer) {
+    const error = new Error("Offer not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(offer);
+});
+
 //Créer une nouvelle offre
 const createOffer = asyncHandler(async (req, res) => {
   const { title, basePrice, discount, validUntil, active, service } = req.body;
@@ -63,4 +74,4 @@ const deleteOffer = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listOffers, createOffer, updateOffer, deleteOffer };
+module.exports = { listOffers, createOffer, updateOffer, deleteOffer, getOfferById };

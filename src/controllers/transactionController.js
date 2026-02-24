@@ -13,6 +13,17 @@ const createTransaction = asyncHandler(async (req, res) => {
     res.status(201).json(transaction);
 });
 
+//Obtenir une transaction par ID
+const getTransactionById = asyncHandler(async (req, res) => {
+  const transaction = await Transaction.findById(req.params.id).lean();
+  if (!transaction) {
+    const error = new Error("Transaction not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(transaction);
+});
+
 //Mettre à jour le statut d'une transaction
 const updateTransactionStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
@@ -46,4 +57,4 @@ const listTransactions = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { createTransaction, updateTransactionStatus, deleteTransaction, listTransactions };
+module.exports = { createTransaction, updateTransactionStatus, deleteTransaction, listTransactions, getTransactionById };

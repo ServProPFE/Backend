@@ -9,6 +9,17 @@ const listReservationDetails = asyncHandler(async (req, res) => {
   res.json({ items: details });
 });
 
+//Obtenir un detail de reservation par ID
+const getReservationDetailById = asyncHandler(async (req, res) => {
+  const detail = await ReservationDetail.findById(req.params.id).lean();
+  if (!detail) {
+    const error = new Error("ReservationDetail not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(detail);
+});
+
 //Créer un detail de reservation
 const createReservationDetail = asyncHandler(async (req, res) => {
   const { description, address, urgent } = req.body;
@@ -45,4 +56,4 @@ const updateReservationDetail = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listReservationDetails, createReservationDetail, deleteReservationDetail, updateReservationDetail };
+module.exports = { listReservationDetails, createReservationDetail, deleteReservationDetail, updateReservationDetail, getReservationDetailById };

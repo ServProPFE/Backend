@@ -20,6 +20,17 @@ const listCompetences = asyncHandler(async (req, res) => {
   res.json({ items: competences });
 });
 
+//Obtenir une competence par ID
+const getCompetenceById = asyncHandler(async (req, res) => {
+  const competence = await Competence.findById(req.params.id).lean();
+  if (!competence) {
+    const error = new Error("Competence not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(competence);
+});
+
 //Créer une competence
 const createCompetence = asyncHandler(async (req, res) => {
   const { serviceId, level, provider } = req.body;
@@ -56,4 +67,4 @@ const updateCompetence = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listCompetences, createCompetence, deleteCompetence, updateCompetence };
+module.exports = { listCompetences, createCompetence, deleteCompetence, updateCompetence, getCompetenceById };

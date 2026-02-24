@@ -9,7 +9,7 @@ const { listInvoices, createInvoice,updateInvoice,deleteInvoice } = require("../
 const router = express.Router();
 
 //Définir les routes pour les factures
-router.get("/", authenticate, authorizeRoles("ADMIN"), listInvoices);
+router.get("/", authenticate, authorizeRoles("ADMIN", "PROVIDER"), listInvoices);
 router.post("/", authenticate, authorizeRoles("ADMIN"), createInvoice);
 router.put("/:id", authenticate, authorizeRoles("ADMIN"), updateInvoice);
 router.delete("/:id", authenticate, authorizeRoles("ADMIN"), deleteInvoice);

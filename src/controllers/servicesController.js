@@ -20,6 +20,19 @@ const listServices = asyncHandler(async (req, res) => {
   res.json({ items: services });
 });
 
+//Obtenir un service par ID
+const getServiceById = asyncHandler(async (req, res) => {
+  const service = await Service.findById(req.params.id).populate('provider', 'name email phone').lean();
+  
+  if (!service) {
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  res.json(service);
+});
+
 //Créer un nouveau service
 const createService = asyncHandler(async (req, res) => {
   const {
@@ -72,4 +85,4 @@ const deleteService = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listServices, createService, updateService, deleteService };
+module.exports = { listServices, getServiceById, createService, updateService, deleteService };

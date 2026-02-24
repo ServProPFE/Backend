@@ -81,5 +81,16 @@ const listBookings = asyncHandler(async (req, res) => {
   res.json({ items: bookings });
 });
 
+//Lister une réservation par ID
+const getBookingById = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id).lean();
+  if (!booking) {
+    const error = new Error("Booking not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(booking);
+});
+
 //Exporter les fonctions du contrôleur
-module.exports = { createBooking, updateBookingStatus, deleteBooking, listBookings };
+module.exports = { createBooking, updateBookingStatus, deleteBooking, listBookings, getBookingById };

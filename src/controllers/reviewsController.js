@@ -16,6 +16,17 @@ const createReview = asyncHandler(async (req, res) => {
   res.status(201).json(review);
 });
 
+//Obtenir une évaluation par ID
+const getReviewById = asyncHandler(async (req, res) => {
+  const review = await Review.findById(req.params.id).lean();
+  if (!review) {
+    const error = new Error("Review not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(review);
+});
+
 //Lister les évaluations d'un prestataire
 const listReviewsByProvider = asyncHandler(async (req, res) => {
   const { providerId } = req.params;
@@ -58,9 +69,25 @@ const updateReview = asyncHandler(async (req, res) => {
 
 //Lister tous les évaluations
 const listReviews = asyncHandler(async (req, res) => {
-  const reviews = await Review.find().sort({ createdAt: -1 }).lean();
+  const { service, provider } = req.query;
+  let query = {};
+
+  // Filter by provider directly
+  if (provider) {
+    query.provider = provider;
+  }
+
+  // Filter by service (need to find bookings first)
+  if (service) {
+    const { Booking } = require("../models/Booking");
+    const bookings = await Booking.find({ service }).select('_id').lean();
+    const bookingIds = bookings.map(b => b._id);
+    query.reservation = { $in: bookingIds };
+  }
+
+  const reviews = await Review.find(query).sort({ createdAt: -1 }).lean();
   res.json({ items: reviews });
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { createReview, listReviewsByProvider, listReviewsByClient, deleteReview, updateReview, listReviews };
+module.exports = { createReview, listReviewsByProvider, listReviewsByClient, deleteReview, updateReview, listReviews, getReviewById };

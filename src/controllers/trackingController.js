@@ -16,6 +16,17 @@ const listTracking = asyncHandler(async (req, res) => {
   res.json({ items: tracking });
 });
 
+//Obtenir un suivi par ID
+const getTrackingById = asyncHandler(async (req, res) => {
+  const tracking = await Tracking.findById(req.params.id).lean();
+  if (!tracking) {
+    const error = new Error("Tracking not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json(tracking);
+});
+
 //Créer un suivi
 const createTracking = asyncHandler(async (req, res) => {
   const { booking, position, at } = req.body;
@@ -52,4 +63,4 @@ const deleteTracking = asyncHandler(async (req, res) => {
 });
 
 //Exporter les fonctions du contrôleur
-module.exports = { listTracking, createTracking, updateTracking, deleteTracking };
+module.exports = { listTracking, createTracking, updateTracking, deleteTracking, getTrackingById };
