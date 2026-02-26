@@ -3,19 +3,40 @@ const { asyncHandler } = require("../utils/asyncHandler");
 
 //Créer une nouvelle transaction
 const createTransaction = asyncHandler(async (req, res) => {
-  const { booking, amount, currency, status } = req.body;
+  const { booking, amount, currency, method, status } = req.body;
     const transaction = await Transaction.create({
     booking,
     amount,
     currency,
+    method: method || 'CASH',
     status,
   });
-    res.status(201).json(transaction);
+    const populatedTransaction = await Transaction.findById(transaction._id)
+      .populate({
+        path: 'booking',
+        select: 'client provider service totalPrice expectedAt status',
+        populate: [
+          { path: 'service', select: 'name' },
+          { path: 'provider', select: 'name' },
+          { path: 'client', select: 'name' }
+        ]
+      });
+    res.status(201).json(populatedTransaction);
 });
 
 //Obtenir une transaction par ID
 const getTransactionById = asyncHandler(async (req, res) => {
-  const transaction = await Transaction.findById(req.params.id).lean();
+  const transaction = await Transaction.findById(req.params.id)
+    .populate({
+      path: 'booking',
+      select: 'client provider service totalPrice expectedAt status',
+      populate: [
+        { path: 'service', select: 'name' },
+        { path: 'provider', select: 'name' },
+        { path: 'client', select: 'name' }
+      ]
+    })
+    .lean();
   if (!transaction) {
     const error = new Error("Transaction not found");
     error.statusCode = 404;
@@ -35,7 +56,17 @@ const updateTransactionStatus = asyncHandler(async (req, res) => {
     }
     transaction.status = status;
     await transaction.save();
-    res.json(transaction);
+    const updatedTransaction = await Transaction.findById(req.params.id)
+      .populate({
+        path: 'booking',
+        select: 'client provider service totalPrice expectedAt status',
+        populate: [
+          { path: 'service', select: 'name' },
+          { path: 'provider', select: 'name' },
+          { path: 'client', select: 'name' }
+        ]
+      });
+    res.json(updatedTransaction);
 });
 
 //Supprimer une transaction
@@ -52,7 +83,18 @@ const deleteTransaction = asyncHandler(async (req, res) => {
 
 //Lister toutes les transactions
 const listTransactions = asyncHandler(async (req, res) => {
-  const transactions = await Transaction.find().sort({ createdAt: -1 }).lean();
+  const transactions = await Transaction.find()
+    .populate({
+      path: 'booking',
+      select: 'client provider service totalPrice expectedAt status',
+      populate: [
+        { path: 'service', select: 'name' },
+        { path: 'provider', select: 'name' },
+        { path: 'client', select: 'name' }
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .lean();
   res.json({ items: transactions });
 });
 

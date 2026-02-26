@@ -1,5 +1,6 @@
 //Importer les modeles et les utilitaires nécessaires
 const { Booking } = require("../models/Booking");
+const { Transaction } = require("../models/Transaction");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 //Créer une nouvelle réservation
@@ -28,6 +29,22 @@ const createBooking = asyncHandler(async (req, res) => {
     tracking,
   });
 
+  // Automatically create a transaction if booking is created as CONFIRMED
+  if (status === 'CONFIRMED') {
+    try {
+      await Transaction.create({
+        booking: booking._id,
+        amount: totalPrice,
+        currency: currency || 'TND',
+        method: 'CASH', // Default payment method
+        status: 'PENDING',
+      });
+    } catch (transactionError) {
+      // Log error but don't fail the booking creation
+      console.error('Failed to create transaction:', transactionError);
+    }
+  }
+
   res.status(201).json(booking);
 });
 
@@ -45,9 +62,31 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const oldStatus = booking.status;
   booking.status = status;
 
   await booking.save();
+
+  // Automatically create a transaction when booking is confirmed
+  if (status === 'CONFIRMED' && oldStatus !== 'CONFIRMED') {
+    try {
+      const existingTransaction = await Transaction.findOne({ booking: booking._id });
+      
+      // Only create if no transaction exists for this booking
+      if (!existingTransaction) {
+        await Transaction.create({
+          booking: booking._id,
+          amount: booking.totalPrice,
+          currency: booking.currency || 'TND',
+          method: 'CASH', // Default payment method
+          status: 'PENDING',
+        });
+      }
+    } catch (transactionError) {
+      // Log error but don't fail the booking status update
+      console.error('Failed to create transaction:', transactionError);
+    }
+  }
 
   res.json(booking);
 });

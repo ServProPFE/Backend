@@ -10,7 +10,7 @@ const {
 //Créer un routeur Express
 const router = express.Router();
 //Définir les routes pour les transactions
-router.get("/", authenticate, authorizeRoles("ADMIN"), listTransactions);
+router.get("/", authenticate, authorizeRoles("ADMIN","CLIENT"), listTransactions);
 router.post("/", authenticate, authorizeRoles("CLIENT"), createTransaction);
 router.put("/:id", authenticate, authorizeRoles("ADMIN"), updateTransactionStatus);
 router.delete("/:id", authenticate, authorizeRoles("ADMIN"), deleteTransaction);
