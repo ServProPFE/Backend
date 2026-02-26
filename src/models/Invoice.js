@@ -7,7 +7,7 @@ const invoiceSchema = new mongoose.Schema(
     number: { type: String, required: true },
     total: { type: Number, required: true },
     issuedAt: { type: Date, default: Date.now },
-    booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
+    booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking", required: true },
   },
   { timestamps: true }
 );

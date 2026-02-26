@@ -86,8 +86,14 @@ const listReviews = asyncHandler(async (req, res) => {
   }
 
   const reviews = await Review.find(query)
-    .populate('reservation', 'service client')
-    .populate('reservation.service', 'name')
+    .populate({
+      path: 'reservation',
+      select: 'service client',
+      populate: [
+        { path: 'service', select: 'name' },
+        { path: 'client', select: 'name' }
+      ]
+    })
     .populate('reviewer', 'name email')
     .populate('provider', 'name email')
     .sort({ createdAt: -1 })

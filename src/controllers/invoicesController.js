@@ -16,9 +16,9 @@ const listInvoices = asyncHandler(async (req, res) => {
     const bookings = await Booking.find({ provider: req.user.id })
       .select("_id")
       .lean();
-    const bookingIds = bookings.map((b) => b._id.toString());
+    const bookingIds = bookings.map((b) => b._id);
 
-    if (bookingId && !bookingIds.includes(bookingId)) {
+    if (bookingId && !bookingIds.some(id => id.toString() === bookingId)) {
       return res.json({ items: [] });
     }
 
@@ -29,14 +29,35 @@ const listInvoices = asyncHandler(async (req, res) => {
     }
   }
 
-  const invoices = await Invoice.find(query).sort({ createdAt: -1 }).lean();
+  const invoices = await Invoice.find(query)
+    .populate({
+      path: 'booking',
+      select: 'client provider service totalPrice',
+      populate: [
+        { path: 'client', select: 'name email' },
+        { path: 'provider', select: 'name email' },
+        { path: 'service', select: 'name' }
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .lean();
 
   res.json({ items: invoices });
 });
 
 //Obtenir une facture par ID
 const getInvoiceById = asyncHandler(async (req, res) => {
-  const invoice = await Invoice.findById(req.params.id).lean();
+  const invoice = await Invoice.findById(req.params.id)
+    .populate({
+      path: 'booking',
+      select: 'client provider service totalPrice',
+      populate: [
+        { path: 'client', select: 'name email' },
+        { path: 'provider', select: 'name email' },
+        { path: 'service', select: 'name' }
+      ]
+    })
+    .lean();
   if (!invoice) {
     const error = new Error("Invoice not found");
     error.statusCode = 404;
