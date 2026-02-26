@@ -14,7 +14,6 @@ const createTransaction = asyncHandler(async (req, res) => {
     const populatedTransaction = await Transaction.findById(transaction._id)
       .populate({
         path: 'booking',
-        select: 'client provider service totalPrice expectedAt status',
         populate: [
           { path: 'service', select: 'name' },
           { path: 'provider', select: 'name' },
@@ -29,7 +28,6 @@ const getTransactionById = asyncHandler(async (req, res) => {
   const transaction = await Transaction.findById(req.params.id)
     .populate({
       path: 'booking',
-      select: 'client provider service totalPrice expectedAt status',
       populate: [
         { path: 'service', select: 'name' },
         { path: 'provider', select: 'name' },
@@ -59,7 +57,6 @@ const updateTransactionStatus = asyncHandler(async (req, res) => {
     const updatedTransaction = await Transaction.findById(req.params.id)
       .populate({
         path: 'booking',
-        select: 'client provider service totalPrice expectedAt status',
         populate: [
           { path: 'service', select: 'name' },
           { path: 'provider', select: 'name' },
@@ -86,7 +83,6 @@ const listTransactions = asyncHandler(async (req, res) => {
   const transactions = await Transaction.find()
     .populate({
       path: 'booking',
-      select: 'client provider service totalPrice expectedAt status',
       populate: [
         { path: 'service', select: 'name' },
         { path: 'provider', select: 'name' },
