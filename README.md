@@ -20,6 +20,7 @@ Backend API for ServPro - an on-demand services platform connecting clients with
 - **User Management**: CLIENT, PROVIDER, and ADMIN roles with JWT authentication
 - **Service Management**: Create, update, list, and delete services with pricing and categories
 - **Booking System**: Complete reservation flow with status tracking
+- **Transaction Management**: Automatic transaction creation & payment tracking with multiple methods (new)
 - **Payment Integration**: Transaction management with multiple payment methods
 - **Review System**: Ratings and comments for service providers
 - **Provider Profiles**: Portfolio, certifications, competences, and availability management
@@ -27,6 +28,7 @@ Backend API for ServPro - an on-demand services platform connecting clients with
 - **Offers & Packages**: Promotional offers and subscription packages
 - **Invoice & Commission**: Automated financial document generation and commission calculation
 - **Notifications**: Multi-channel notification system (Email, Push, In-App)
+- **Internationalization**: Support for bilingual responses (AR/EN)
 
 ## 🛠 Tech Stack
 
@@ -188,6 +190,36 @@ Authorization: Bearer <your_jwt_token>
 | PATCH  | `/bookings/:id/status`| Yes           | PROVIDER, ADMIN        | Update booking status   |
 | DELETE | `/bookings/:id`       | Yes           | CLIENT, ADMIN          | Delete booking          |
 
+### Transactions (New)
+
+| Method | Endpoint              | Auth Required | Roles                     | Description                    |
+|--------|------------------------|---------------|---------------------------|--------------------------------|
+| GET    | `/transactions`        | Yes           | CLIENT, PROVIDER, ADMIN   | List all transactions          |
+| POST   | `/transactions`        | Yes           | CLIENT                    | Create transaction             |
+| PUT    | `/transactions/:id`    | Yes           | ADMIN                     | Update transaction status      |
+| DELETE | `/transactions/:id`    | Yes           | ADMIN                     | Delete transaction             |
+
+**Note**: Transactions are auto-created when booking status changes to CONFIRMED.
+
+**Example Transaction Creation** (automatic on booking confirmation):
+```json
+{
+  "booking": "booking_id",
+  "amount": 150,
+  "currency": "TND",
+  "method": "CASH",
+  "status": "PENDING"
+}
+```
+
+**Payment Methods**:
+- CARD
+- KNET
+- APPLE_PAY
+- GOOGLE_PAY
+- PAYPAL
+- CASH
+
 ### Reviews
 
 | Method | Endpoint                   | Auth Required | Roles          | Description                 |
@@ -268,7 +300,7 @@ The system implements three user types with specific permissions:
 1. **User** - User accounts with role-based profiles
 2. **Service** - Service offerings with pricing
 3. **Booking** - Reservation records with status tracking
-4. **Transaction** - Payment processing records
+4. **Transaction** - Payment processing records (auto-created on booking confirmation) (new)
 5. **Review** - Customer feedback and ratings
 6. **Notification** - System notifications
 
@@ -291,7 +323,27 @@ The system implements three user types with specific permissions:
 
 ## 💻 Development
 
-### Running in Development Mode
+### Transaction Workflow
+
+Transactions are managed with the following automatic flow:
+
+1. **Booking Created**: When a booking is created with `status: CONFIRMED`, a transaction is automatically generated
+2. **Booking Status Updated**: When an existing booking status is updated to `CONFIRMED`, a transaction is created (if not already existing)
+3. **Transaction States**:
+   - `PENDING` - Initial state, awaiting payment processing
+   - `SUCCESS` - Payment processed successfully
+   - `FAILED` - Payment processing failed
+4. **Admin Management**: Admins can view, filter, and update transaction statuses via the Dashboard
+
+### Payment Methods Supported
+
+Transactions support multiple payment methods:
+- **CARD** - Debit/Credit card
+- **KNET** - Kuwait's electronic payment gateway
+- **APPLE_PAY** - Apple's payment system
+- **GOOGLE_PAY** - Google's payment system  
+- **PAYPAL** - PayPal payment
+- **CASH** - Cash payment (default)
 
 ```bash
 npm run dev
@@ -329,6 +381,18 @@ curl -X POST http://localhost:4000/auth/login \
 
 # List services (public)
 curl http://localhost:4000/services
+
+# List transactions (Admin only)
+curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  http://localhost:4000/transactions
+
+# Update transaction status (Admin only)
+curl -X PUT http://localhost:4000/transactions/TRANSACTION_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "status": "SUCCESS"
+  }'
 
 # Create booking (protected - requires token)
 curl -X POST http://localhost:4000/bookings \
