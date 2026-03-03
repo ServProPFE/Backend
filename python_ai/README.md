@@ -1,6 +1,6 @@
 # Python AI Chatbot Service
 
-This is a Flask-based microservice that provides intelligent NLP-powered chatbot functionality using TF-IDF (Term Frequency-Inverse Document Frequency) and Cosine Similarity for service recommendations.
+This is a Flask-based microservice that provides intent detection for the chatbot using a lightweight pure-Python TF-IDF + cosine similarity engine (no scikit-learn / numpy required).
 
 ## Architecture
 
@@ -16,12 +16,13 @@ MongoDB (Services Database)
 
 ## Features
 
-- **TF-IDF Vectorization**: Converts text input to numerical features
-- **Cosine Similarity**: Measures similarity between user input and service categories
-- **Bilingual Support**: English and Arabic language support
-- **Multi-character N-grams**: Analyzes character patterns for better matching
-- **Confidence Scoring**: Returns confidence scores for each recommendation
-- **Database Integration**: Fetches actual services from MongoDB
+- **Pure Python NLP Engine**: TF-IDF + cosine similarity implemented without external ML libraries
+- **Hybrid Scoring**: Weighted score from cosine similarity + keyword overlap
+- **Actionable Responses**: Returns service-specific guidance (not confidence only)
+- **Issue Type Detection**: Detects subtype hints (e.g., leak, wiring, no cooling, dust)
+- **Bilingual Support**: English and Arabic response generation, with multilingual keyword sets (EN/FR/AR)
+- **Arabic Token Normalization**: Handles common prefixes to improve matching quality
+- **Detailed Debug Output**: Per-service `all_scores` with `cosine_score`, `keyword_score`, and `matched_keywords`
 
 ## Installation
 
@@ -41,7 +42,7 @@ pip install -r requirements.txt
 2. **Verify Installation**:
 ```bash
 python -m flask --version
-python -m sklearn --version
+python -m py_compile app.py
 ```
 
 ## Running the Service
@@ -78,7 +79,7 @@ Check if the Python AI service is running.
 ```json
 {
   "status": "AI Chatbot service is running",
-  "model": "TF-IDF + Cosine Similarity",
+  "model": "TF-IDF + Cosine Similarity (Lightweight - No ML Library)",
   "version": "1.0.0"
 }
 ```
@@ -101,21 +102,28 @@ Get AI-powered service recommendation based on user input.
 {
   "user_input": "I need a plumber",
   "detected_service": "plomberie",
-  "confidence": 0.85,
+  "confidence": 0.21,
   "language": "en",
+  "message": "Detected Plomberie with 21% confidence. This looks like a leak issue...",
   "recommendations": [
     {
       "service_name": "Plomberie",
       "category": "PLOMBERIE",
-      "confidence": 0.85,
-      "message": "I found plumbing services for you. Confidence: 85%"
+      "confidence": 0.21,
+      "issue_type": "leak",
+      "matched_keywords": ["leak", "sink"],
+      "message": "Detected Plomberie with 21% confidence. This looks like a leak issue..."
     }
   ],
   "all_scores": {
-    "plomberie": { "similarity": 0.85, "service_name": "Plomberie", "category": "PLOMBERIE" },
-    "electricite": { "similarity": 0.15, "service_name": "Électricité", "category": "ELECTRICITE" },
-    "climatisation": { "similarity": 0.10, "service_name": "Climatisation", "category": "CLIMATISATION" },
-    "nettoyage": { "similarity": 0.05, "service_name": "Nettoyage", "category": "NETTOYAGE" }
+    "plomberie": {
+      "similarity": 0.21,
+      "cosine_score": 0.16,
+      "keyword_score": 0.30,
+      "matched_keywords": ["leak", "sink"],
+      "service_name": "Plomberie",
+      "category": "PLOMBERIE"
+    }
   }
 }
 ```
@@ -165,12 +173,12 @@ The AI recognizes 4 main service categories:
 ## How It Works
 
 ### 1. Text Vectorization
-The input text is converted to TF-IDF vectors using character n-grams (2-3 character sequences).
+The input text is normalized and converted to TF-IDF vectors using token-based processing.
 
 **Example:**
 - Input: "I need a plumber"
-- Characters: "I ", " n", "ne", "ee", "ed", ...
-- TF-IDF Vector: [0.25, 0.15, 0.30, ...]
+- Tokens: `i`, `need`, `plumber`
+- TF-IDF Vector: sparse token→weight dictionary
 
 ### 2. Similarity Calculation
 For each service category, we calculate the cosine similarity between the user input vector and the service keywords vector.
@@ -186,16 +194,18 @@ Where:
 - Similarity ranges from 0 to 1
 
 ### 3. Confidence Scoring
-The highest similarity score becomes the recommendation confidence.
+Confidence is computed from a hybrid score:
+
+`0.6 * cosine_score + 0.4 * keyword_score`
 
 **Example Scores:**
-- Plomberie: 0.85 (85%) ← Recommended
-- Électricité: 0.15 (15%)
-- Climatisation: 0.10 (10%)
-- Nettoyage: 0.05 (5%)
+- Plomberie: 0.21 (21%) ← Recommended
+- Électricité: 0.07 (7%)
+- Climatisation: 0.01 (1%)
+- Nettoyage: 0.00 (0%)
 
 ### 4. Service Lookup
-If confidence > 0.3, the system fetches the actual service from MongoDB and returns service details.
+If confidence passes threshold (default `0.08`), the Node.js backend fetches actual service details from MongoDB and returns them to the frontend.
 
 ## Testing
 
@@ -297,18 +307,18 @@ kill -9 <PID>
 
 ### Low Confidence Scores
 
-**Issue:** Recommendations have low confidence (< 0.3)
+**Issue:** Recommendations are low or no service is detected
 
 **Solution:**
-- Enable text preprocessing (lowercasing, tokenization)
-- Add more keywords to service categories
-- Retrain the TF-IDF vectorizer with more examples
-- Increase n-gram range in TF-IDF
+- Add more domain keywords/synonyms in `SERVICES_DB`
+- Extend `ISSUE_PATTERNS` for better actionable responses
+- Verify language passed is `en` or `ar`
+- Tune per-service `confidence_threshold`
 
 ## Performance
 
 - **Response Time**: <500ms per request
-- **Memory Usage**: ~100MB (includes all ML models)
+- **Memory Usage**: Low footprint (no external ML model runtime)
 - **Concurrent Requests**: Supports unlimited (Flask default)
 - **Scalability**: Can be dockerized for production deployment
 
@@ -324,7 +334,7 @@ SERVICES_DB = {
         'keywords': ['keyword1', 'keyword2', ...],
         'service_name': 'Service Name',
         'category': 'NEW_SERVICE',
-        'confidence_threshold': 0.3
+    'confidence_threshold': 0.08
     }
 }
 ```
@@ -333,9 +343,9 @@ SERVICES_DB = {
 
 1. **Add more keywords** to each category
 2. **Include regional dialects** (French & Arabic variations)
-3. **Increase n-gram range** (currently 2-3)
-4. **Lower confidence thresholds** if too strict
-5. **Collect user data** to train custom models
+3. **Refine issue patterns** for more precise guidance text
+4. **Tune confidence thresholds** if detection is too strict/too loose
+5. **Collect real user queries** and continuously improve keyword coverage
 
 ## Production Deployment
 

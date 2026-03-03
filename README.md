@@ -29,6 +29,7 @@ Backend API for ServPro - an on-demand services platform connecting clients with
 - **Invoice & Commission**: Automated financial document generation and commission calculation
 - **Notifications**: Multi-channel notification system (Email, Push, In-App)
 - **Internationalization**: Support for bilingual responses (AR/EN)
+- **AI Chatbot Integration**: Node.js delegates intent analysis to Python microservice and returns actionable service guidance
 
 ## 🛠 Tech Stack
 
@@ -96,6 +97,13 @@ ServProBackend/
    npm run dev      # Development with nodemon
    ```
 
+6. **(Optional but recommended) Start Python AI service for chatbot**
+  ```bash
+  cd python_ai
+  python -m pip install -r requirements.txt
+  python app.py
+  ```
+
 ## ⚙️ Configuration
 
 Create a `.env` file in the root directory with the following variables:
@@ -106,6 +114,7 @@ MONGODB_URI=mongodb://localhost:27017/servpro
 NODE_ENV=development
 JWT_SECRET=your_super_secret_key_change_this
 JWT_EXPIRES_IN=7d
+PYTHON_AI_SERVICE=http://localhost:5000
 ```
 
 ### Environment Variables
@@ -117,6 +126,7 @@ JWT_EXPIRES_IN=7d
 | `NODE_ENV`     | Environment (development/production) | `development`                     |
 | `JWT_SECRET`   | Secret key for JWT signing           | *Required*                        |
 | `JWT_EXPIRES_IN` | Token expiration time              | `7d`                              |
+| `PYTHON_AI_SERVICE` | Python chatbot service base URL | `http://localhost:5000`          |
 
 ## 📚 API Documentation
 
@@ -256,10 +266,20 @@ Authorization: Bearer <your_jwt_token>
 - **Certifications**: `/certifications` - Provider certifications
 - **Availability**: `/availability` - Provider schedule
 - **Tracking**: `/tracking` - Real-time booking tracking
+- **Chatbot**: `/chatbot` - AI-powered assistant (Node.js + Python AI service)
 - **Invoices**: `/invoices` - Transaction invoices (ADMIN only)
 - **Commissions**: `/commissions` - Platform commissions (ADMIN only)
 - **Notations**: `/notations` - Provider ratings (ADMIN only)
 - **Reservation Details**: `/reservation-details` - Booking details
+
+### Chatbot Endpoints
+
+| Method | Endpoint                | Auth Required | Roles         | Description |
+|--------|-------------------------|---------------|---------------|-------------|
+| POST   | `/chatbot`              | Yes           | CLIENT, ADMIN | Get AI chatbot response + recommended service |
+| POST   | `/chatbot/analyze`      | Yes           | CLIENT, ADMIN | Detailed intent score analysis |
+| GET    | `/chatbot/suggestions`  | No            | Public        | Localized suggestion prompts |
+| GET    | `/chatbot/health`       | No            | Public        | Node↔Python AI service health status |
 
 ## 🔐 Authentication & Authorization
 
