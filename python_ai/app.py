@@ -403,9 +403,9 @@ def generate_response(service_key, service_name, confidence, language='en', matc
     keywords_text = ', '.join(matched_keywords[:4]) if matched_keywords else ('كلمات محددة قليلة' if language == 'ar' else 'limited keyword evidence')
 
     if language == 'ar':
-        return f"تم تحديد خدمة {service_name} بدقة تقريبية {confidence_pct}%. {advice} الكلمات المطابقة: {keywords_text}."
+        return f" {advice} "
     
-    return f"Detected {service_name} with {confidence_pct}% confidence. {advice} Matched keywords: {keywords_text}."
+    return f" {advice}"
 
 if __name__ == '__main__':
     # Run on port 5000 (different from Node.js port 4000)
