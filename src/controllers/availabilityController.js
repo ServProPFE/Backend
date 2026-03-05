@@ -52,14 +52,13 @@ const updateAvailability = asyncHandler(async (req, res) => {
 
 //Supprimer une disponibilite
 const deleteAvailability = asyncHandler(async (req, res) => {
-  const availability = await Availability.findById(req.params.id);
-    if (!availability) {
+  const availability = await Availability.findByIdAndDelete(req.params.id);
+  if (!availability) {
     const error = new Error("Availability not found");
     error.statusCode = 404;
     throw error;
   }
-    await availability.remove();
-    res.json({ message: "Availability deleted" });
+  res.json({ message: "Availability deleted" });
 });
 
 //Exporter les fonctions du contrôleur

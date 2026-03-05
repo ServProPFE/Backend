@@ -74,14 +74,13 @@ const updateService = asyncHandler(async (req, res) => {
 
 //Supprimer un service
 const deleteService = asyncHandler(async (req, res) => {
-  const service = await Service.findById(req.params.id);
-    if (!service) {
+  const service = await Service.findByIdAndDelete(req.params.id);
+  if (!service) {
     const error = new Error("Service not found");
     error.statusCode = 404;
     throw error;
   }
-    await service.remove();
-    res.json({ message: "Service deleted" });
+  res.json({ message: "Service deleted" });
 });
 
 //Exporter les fonctions du contrôleur

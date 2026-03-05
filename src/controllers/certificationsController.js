@@ -46,14 +46,13 @@ const updateCertification = asyncHandler(async (req, res) => {
 
 //Supprimer une certification
 const deleteCertification = asyncHandler(async (req, res) => {
-  const certification = await Certification.findById(req.params.id);
-    if (!certification) {
+  const certification = await Certification.findByIdAndDelete(req.params.id);
+  if (!certification) {
     const error = new Error("Certification not found");
     error.statusCode = 404;
     throw error;
   }
-    await certification.remove();
-    res.json({ message: "Certification deleted" });
+  res.json({ message: "Certification deleted" });
 });
 
 //Obtenir une certification par ID

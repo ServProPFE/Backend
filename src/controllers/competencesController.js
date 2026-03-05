@@ -42,14 +42,13 @@ const createCompetence = asyncHandler(async (req, res) => {
 
 //Supprimer une competence
 const deleteCompetence = asyncHandler(async (req, res) => {
-  const competence = await Competence.findById(req.params.id);
-    if (!competence) {
-      const error = new Error("Competence not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await competence.remove();
-    res.json({ message: "Competence deleted" });
+  const competence = await Competence.findByIdAndDelete(req.params.id);
+  if (!competence) {
+    const error = new Error("Competence not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Competence deleted" });
 });
 
 //Mettre à jour une competence

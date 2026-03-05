@@ -93,14 +93,13 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
 
 //Supprimer une réservation
 const deleteBooking = asyncHandler(async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
-    if (!booking) {
-      const error = new Error("Booking not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await booking.remove();
-    res.json({ message: "Booking deleted" });
+  const booking = await Booking.findByIdAndDelete(req.params.id);
+  if (!booking) {
+    const error = new Error("Booking not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Booking deleted" });
 });
 
 //Lister les réservations avec des filtres optionnels

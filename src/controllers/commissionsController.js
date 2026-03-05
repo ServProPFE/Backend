@@ -61,14 +61,14 @@ const updateCommission = asyncHandler(async (req, res) => {
 });
 
 //Supprimer une commission
-const deleteCommission = asyncHandler(async (req, res) => {  const commission = await Commission.findById(req.params.id);
-    if (!commission) {
-      const error = new Error("Commission not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await commission.remove();
-    res.json({ message: "Commission deleted" });
+const deleteCommission = asyncHandler(async (req, res) => {
+  const commission = await Commission.findByIdAndDelete(req.params.id);
+  if (!commission) {
+    const error = new Error("Commission not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Commission deleted" });
 });
 
 //Exporter les fonctions du contrôleur

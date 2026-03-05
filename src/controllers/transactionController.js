@@ -68,14 +68,13 @@ const updateTransactionStatus = asyncHandler(async (req, res) => {
 
 //Supprimer une transaction
 const deleteTransaction = asyncHandler(async (req, res) => {
-  const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) {
-      const error = new Error("Transaction not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await transaction.remove();
-    res.json({ message: "Transaction deleted" });
+  const transaction = await Transaction.findByIdAndDelete(req.params.id);
+  if (!transaction) {
+    const error = new Error("Transaction not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Transaction deleted" });
 });
 
 //Lister toutes les transactions

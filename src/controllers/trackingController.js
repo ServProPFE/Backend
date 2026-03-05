@@ -52,14 +52,13 @@ const updateTracking = asyncHandler(async (req, res) => {
 
 //Supprimer un suivi
 const deleteTracking = asyncHandler(async (req, res) => {
-  const tracking = await Tracking.findById(req.params.id);
-    if (!tracking) {
-      const error = new Error("Tracking not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await tracking.remove();
-    res.json({ message: "Tracking deleted" });
+  const tracking = await Tracking.findByIdAndDelete(req.params.id);
+  if (!tracking) {
+    const error = new Error("Tracking not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Tracking deleted" });
 });
 
 //Exporter les fonctions du contrôleur

@@ -91,14 +91,13 @@ const updateInvoice = asyncHandler(async (req, res) => {
 
 //Supprimer une facture
 const deleteInvoice = asyncHandler(async (req, res) => {
-  const invoice = await Invoice.findById(req.params.id);
-    if (!invoice) {
-      const error = new Error("Invoice not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await invoice.remove();
-    res.json({ message: "Invoice deleted" });
+  const invoice = await Invoice.findByIdAndDelete(req.params.id);
+  if (!invoice) {
+    const error = new Error("Invoice not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Invoice deleted" });
 });
 
 //Exporter les fonctions du contrôleur

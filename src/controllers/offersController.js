@@ -63,14 +63,13 @@ const updateOffer = asyncHandler(async (req, res) => {
 
 //Supprimer une offre
 const deleteOffer = asyncHandler(async (req, res) => {
-  const offer = await Offer.findById(req.params.id);
-    if (!offer) {
+  const offer = await Offer.findByIdAndDelete(req.params.id);
+  if (!offer) {
     const error = new Error("Offer not found");
     error.statusCode = 404;
     throw error;
   }
-    await offer.remove();
-    res.json({ message: "Offer deleted" });
+  res.json({ message: "Offer deleted" });
 });
 
 //Exporter les fonctions du contrôleur

@@ -43,14 +43,13 @@ const listReviewsByClient = asyncHandler(async (req, res) => {
 
 //Supprimer une évaluation
 const deleteReview = asyncHandler(async (req, res) => {
-  const review = await Review.findById(req.params.id);
-    if (!review) {
-      const error = new Error("Review not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await review.remove();
-    res.json({ message: "Review deleted" });
+  const review = await Review.findByIdAndDelete(req.params.id);
+  if (!review) {
+    const error = new Error("Review not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "Review deleted" });
 });
 
 //Mettre à jour une évaluation

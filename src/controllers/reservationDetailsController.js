@@ -31,14 +31,13 @@ const createReservationDetail = asyncHandler(async (req, res) => {
 
 //Supprimer un detail de reservation
 const deleteReservationDetail = asyncHandler(async (req, res) => {
-  const detail = await ReservationDetail.findById(req.params.id);
-    if (!detail) {
-      const error = new Error("ReservationDetail not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    await detail.remove();
-    res.json({ message: "ReservationDetail deleted" });
+  const detail = await ReservationDetail.findByIdAndDelete(req.params.id);
+  if (!detail) {
+    const error = new Error("ReservationDetail not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  res.json({ message: "ReservationDetail deleted" });
 });
 
 //Mettre à jour un detail de reservation
