@@ -171,7 +171,7 @@ const seedData = async () => {
       // Hassan - Plomberie
       {
         provider: providers[0]._id,
-        name: "Réparation fuite d'eau",
+        name: "serviceNames.waterLeakRepair",
         category: "PLOMBERIE",
         priceMin: 50,
         duration: 60,
@@ -179,7 +179,7 @@ const seedData = async () => {
       },
       {
         provider: providers[0]._id,
-        name: "Installation sanitaire complète",
+        name: "serviceNames.completeSanitaryInstallation",
         category: "PLOMBERIE",
         priceMin: 200,
         duration: 180,
@@ -187,7 +187,7 @@ const seedData = async () => {
       },
       {
         provider: providers[0]._id,
-        name: "Débouchage canalisation",
+        name: "serviceNames.pipeCleaning",
         category: "PLOMBERIE",
         priceMin: 40,
         duration: 45,
@@ -197,7 +197,7 @@ const seedData = async () => {
       // Karim - Électricité
       {
         provider: providers[1]._id,
-        name: "Installation électrique maison",
+        name: "serviceNames.electricalInstallation",
         category: "ELECTRICITE",
         priceMin: 300,
         duration: 240,
@@ -205,7 +205,7 @@ const seedData = async () => {
       },
       {
         provider: providers[1]._id,
-        name: "Réparation panne électrique",
+        name: "serviceNames.electricityRepair",
         category: "ELECTRICITE",
         priceMin: 60,
         duration: 90,
@@ -213,7 +213,7 @@ const seedData = async () => {
       },
       {
         provider: providers[1]._id,
-        name: "Installation tableau électrique",
+        name: "serviceNames.electricalPanelUpgrade",
         category: "ELECTRICITE",
         priceMin: 150,
         duration: 120,
@@ -223,7 +223,7 @@ const seedData = async () => {
       // Salah - Climatisation
       {
         provider: providers[2]._id,
-        name: "Installation climatiseur split",
+        name: "serviceNames.acInstallation",
         category: "CLIMATISATION",
         priceMin: 400,
         duration: 180,
@@ -231,7 +231,7 @@ const seedData = async () => {
       },
       {
         provider: providers[2]._id,
-        name: "Maintenance climatisation",
+        name: "serviceNames.acMaintenance",
         category: "CLIMATISATION",
         priceMin: 80,
         duration: 60,
@@ -239,7 +239,7 @@ const seedData = async () => {
       },
       {
         provider: providers[2]._id,
-        name: "Réparation climatiseur",
+        name: "serviceNames.acRepair",
         category: "CLIMATISATION",
         priceMin: 100,
         duration: 90,
@@ -249,7 +249,7 @@ const seedData = async () => {
       // Amira - Nettoyage
       {
         provider: providers[3]._id,
-        name: "Nettoyage appartement complet",
+        name: "serviceNames.apartmentCleaning",
         category: "NETTOYAGE",
         priceMin: 70,
         duration: 120,
@@ -257,7 +257,7 @@ const seedData = async () => {
       },
       {
         provider: providers[3]._id,
-        name: "Nettoyage après travaux",
+        name: "serviceNames.postConstructionCleaning",
         category: "NETTOYAGE",
         priceMin: 120,
         duration: 180,
@@ -265,7 +265,7 @@ const seedData = async () => {
       },
       {
         provider: providers[3]._id,
-        name: "Nettoyage vitres et façades",
+        name: "serviceNames.windowCleaning",
         category: "NETTOYAGE",
         priceMin: 50,
         duration: 90,
@@ -275,7 +275,7 @@ const seedData = async () => {
       // Youssef - Multi-services
       {
         provider: providers[4]._id,
-        name: "Dépannage urgent 24/7",
+        name: "serviceNames.urgentRepair",
         category: "AUTRE",
         priceMin: 80,
         duration: 60,
@@ -283,7 +283,7 @@ const seedData = async () => {
       },
       {
         provider: providers[4]._id,
-        name: "Petits travaux de bricolage",
+        name: "serviceNames.handymanTasks",
         category: "AUTRE",
         priceMin: 45,
         duration: 90,
@@ -297,7 +297,7 @@ const seedData = async () => {
     // Create some offers with discounts
     const offers = await Offer.create([
       {
-        title: "Promotion Plomberie - 20% de réduction",
+        title: "offerTitles.plumberyPromotion",
         basePrice: services[0].priceMin,
         discount: 20,
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -305,7 +305,7 @@ const seedData = async () => {
         service: services[0]._id,
       },
       {
-        title: "Offre Climatisation - 15% de réduction",
+        title: "offerTitles.acOffer",
         basePrice: services[6].priceMin,
         discount: 15,
         validUntil: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
@@ -313,7 +313,7 @@ const seedData = async () => {
         service: services[6]._id,
       },
       {
-        title: "Nettoyage Printemps - 25% de réduction",
+        title: "offerTitles.springCleaning",
         basePrice: services[9].priceMin,
         discount: 25,
         validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
@@ -328,32 +328,32 @@ const seedData = async () => {
     // Create reservation details
     const reservationDetails = await ReservationDetail.create([
       {
-        description: "Fuite d'eau sous l'évier de la cuisine",
+        description: "Water leak in the kitchen sink, needs urgent repair",
         address: "Rue de la République, Tunis",
         urgent: true,
       },
       {
-        description: "Installation d'un nouveau climatiseur dans le salon",
+        description: "Installation of a new air conditioner in the living room",
         address: "Avenue Habib Bourguiba, Sfax",
         urgent: false,
       },
       {
-        description: "Nettoyage complet de l'appartement avant emménagement",
+        description: "Deep cleaning of the apartment before moving in",
         address: "Rue Ibn Khaldoun, Sousse",
         urgent: false,
       },
       {
-        description: "Panne électrique dans toute la maison",
+        description: "Electrical failure throughout the house, needs immediate attention",
         address: "Avenue de la Liberté, Bizerte",
         urgent: true,
       },
       {
-        description: "Débouchage des canalisations de la salle de bain",
+        description: "Clogged drains in the bathroom, requires cleaning",
         address: "Rue Mongi Slim, Nabeul",
         urgent: false,
       },
       {
-        description: "Maintenance préventive climatisation",
+        description: "Preventive maintenance for air conditioning",
         address: "Avenue Mohamed V, Monastir",
         urgent: false,
       },
