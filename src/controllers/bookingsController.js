@@ -1,7 +1,39 @@
 //Importer les modeles et les utilitaires nécessaires
 const { Booking } = require("../models/Booking");
 const { Transaction } = require("../models/Transaction");
+const { Service } = require("../models/Service");
+const { Offer } = require("../models/Offer");
 const { asyncHandler } = require("../utils/asyncHandler");
+
+const roundTo2 = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const getBookingPriceWithOffer = async (serviceId) => {
+  const serviceDoc = await Service.findById(serviceId).lean();
+
+  if (!serviceDoc) {
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const now = new Date();
+  const offer = await Offer.findOne({
+    service: serviceId,
+    active: true,
+    $or: [{ validUntil: { $exists: false } }, { validUntil: null }, { validUntil: { $gte: now } }],
+  })
+    .sort({ discount: -1, createdAt: -1 })
+    .lean();
+
+  const basePrice = Number(offer?.basePrice ?? serviceDoc.priceMin ?? 0);
+  const discountPct = Math.max(0, Math.min(Number(offer?.discount ?? 0), 100));
+  const discountedPrice = roundTo2(basePrice * (1 - discountPct / 100));
+
+  return {
+    totalPrice: discountedPrice,
+    currency: serviceDoc.currency || "TND",
+  };
+};
 
 //Créer une nouvelle réservation
 const createBooking = asyncHandler(async (req, res) => {
@@ -11,11 +43,11 @@ const createBooking = asyncHandler(async (req, res) => {
     service,
     status,
     expectedAt,
-    totalPrice,
-    currency,
     detail,
     tracking,
   } = req.body;
+
+  const priceInfo = await getBookingPriceWithOffer(service);
 
   const booking = await Booking.create({
     client,
@@ -23,8 +55,8 @@ const createBooking = asyncHandler(async (req, res) => {
     service,
     status,
     expectedAt,
-    totalPrice,
-    currency,
+    totalPrice: priceInfo.totalPrice,
+    currency: priceInfo.currency,
     detail,
     tracking,
   });
@@ -34,8 +66,8 @@ const createBooking = asyncHandler(async (req, res) => {
     try {
       await Transaction.create({
         booking: booking._id,
-        amount: totalPrice,
-        currency: currency || 'TND',
+        amount: booking.totalPrice,
+        currency: booking.currency || 'TND',
         method: 'CASH', // Default payment method
         status: 'PENDING',
       });
