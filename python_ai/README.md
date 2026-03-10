@@ -22,6 +22,7 @@ MongoDB (Services Database)
 - **Issue Type Detection**: Detects subtype hints (e.g., leak, wiring, no cooling, dust)
 - **Bilingual Support**: English and Arabic response generation, with multilingual keyword sets (EN/FR/AR)
 - **Arabic Token Normalization**: Handles common prefixes to improve matching quality
+- **Gemini AI Fallback**: Intelligent fallback using Google Gemini API when confidence is low (< 8%)
 - **Detailed Debug Output**: Per-service `all_scores` with `cosine_score`, `keyword_score`, and `matched_keywords`
 
 ## Installation
@@ -44,6 +45,41 @@ pip install -r requirements.txt
 python -m flask --version
 python -m py_compile app.py
 ```
+
+### Gemini API Setup (Optional)
+
+The service includes an intelligent fallback using Google Gemini API for queries that don't match predefined service patterns (confidence < 8%).
+
+**To enable Gemini fallback:**
+
+1. **Get API Key**:
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key for Gemini
+
+2. **Set Environment Variable**:
+   
+   **Windows (PowerShell):**
+   ```powershell
+   $env:GEMINI_API_KEY="your-api-key-here"
+   ```
+   
+   **Windows (Command Prompt):**
+   ```cmd
+   set GEMINI_API_KEY=your-api-key-here
+   ```
+   
+   **macOS/Linux:**
+   ```bash
+   export GEMINI_API_KEY="your-api-key-here"
+   ```
+
+3. **Permanent Setup** (Add to `.env` file):
+   ```bash
+   # In ServProBackend/.env
+   GEMINI_API_KEY=your-api-key-here
+   ```
+
+**Note:** The service works without the API key - it gracefully falls back to standard "Unable to detect service" messages if the key is not configured.
 
 ## Running the Service
 
@@ -207,6 +243,33 @@ Confidence is computed from a hybrid score:
 ### 4. Service Lookup
 If confidence passes threshold (default `0.08`), the Node.js backend fetches actual service details from MongoDB and returns them to the frontend.
 
+### 5. Gemini AI Fallback (Optional)
+When confidence is below the threshold (`< 0.08`), the service can optionally use Google Gemini API to generate helpful responses:
+
+**Trigger Condition:** `confidence < 0.08` AND `GEMINI_API_KEY` is configured
+
+**Fallback Behavior:**
+- Sends user query + service context to Gemini API
+- Generates professional, optimistic response with service suggestion
+- Returns bilingual responses (English/Arabic)
+- Adds metadata indicator showing AI-generated content
+
+**Example Flow:**
+```
+User: "How do I fix a squeaky door?"
+TF-IDF Confidence: 0.02 (too low)
+↓
+Gemini API: Generates contextual response
+↓
+Response: "A squeaky door typically needs lubrication or hinge adjustment. 
+Our maintenance service experts can help with this! Consider booking 
+our home repair service for quick assistance."
+
+💡 (AI-generated suggestion - Confidence: 2%)
+```
+
+**Without API Key:** Falls back to standard message asking user to clarify the service type.
+
 ## Testing
 
 ### Test with cURL
@@ -267,6 +330,7 @@ const aiResponse = await axios.post(`${PYTHON_AI_SERVICE}/recommend`, {
 In `ServProBackend/.env`:
 ```bash
 PYTHON_AI_SERVICE=http://localhost:5000
+GEMINI_API_KEY=your-gemini-api-key-here  # Optional: Enables AI fallback for unmatched queries
 ```
 
 ## Troubleshooting
@@ -385,7 +449,7 @@ python-ai:
 - [ ] Conversation memory (context awareness)
 - [ ] Multi-turn dialogue support
 - [ ] Sentiment analysis
-- [ ] Integration with Gemini API for complex queries
+- [x] Integration with Gemini API for complex queries ✅ **IMPLEMENTED**
 - [ ] Speech recognition (audio to text)
 - [ ] Chat analytics dashboard
 

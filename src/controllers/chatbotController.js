@@ -60,6 +60,9 @@ const getChatbotResponse = asyncHandler(async (req, res) => {
   let botMessage = '';
   if (recommendations && recommendations.length > 0) {
     botMessage = recommendations[0].message;
+  } else if (aiAnalysis.message) {
+    // Use the message from Python AI (Gemini fallback or error message)
+    botMessage = aiAnalysis.message;
   } else {
     botMessage = language === 'ar' 
       ? 'عذراً، لم أتمكن من فهم طلبك. يرجى تحديد الخدمة المطلوبة: السباكة، الكهرباء، التكييف، أو التنظيف.' 
@@ -84,7 +87,8 @@ const getChatbotResponse = asyncHandler(async (req, res) => {
       },
       currency: recommendedService.currency || 'TND'
     } : null,
-    aiModel: 'TF-IDF + Cosine Similarity (Python)',
+    aiModel: aiAnalysis.source === 'gemini_fallback' ? 'Gemini AI (Fallback)' : 'TF-IDF + Cosine Similarity (Python)',
+    geminiUsed: aiAnalysis.fallback_used || false,
     allScores: aiAnalysis.all_scores,
     timestamp: new Date()
   };

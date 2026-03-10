@@ -3,9 +3,25 @@ from flask_cors import CORS
 from collections import Counter
 import math
 import re
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Configure Gemini API
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel('gemini-flash-latest')
+    print("✅ Gemini API configured successfully")
+else:
+    gemini_model = None
+    print("⚠️  Gemini API key not found - fallback disabled")
 
 # Service keywords database
 SERVICES_DB = {
@@ -276,10 +292,19 @@ def recommend():
             })
             response['message'] = response['recommendations'][0]['message']
         else:
-            response['message'] = 'Unable to detect service' if language == 'en' else 'لم أتمكن من اكتشاف الخدمة'
+            # Use Gemini API for fallback when confidence is too low
+            gemini_response = generate_gemini_response(user_input, language, result['confidence'])
+            response['message'] = gemini_response
             response['suggestions'] = [s['service_name'] for s in SERVICES_DB.values()]
+            response['source'] = 'gemini_fallback'
+            response['fallback_used'] = True
         
         response['all_scores'] = result['all_scores']
+        
+        # Add source metadata
+        if 'source' not in response:
+            response['source'] = 'tfidf'
+            response['fallback_used'] = False
         
         return jsonify(response), 200
 
@@ -406,6 +431,91 @@ def generate_response(service_key, service_name, confidence, language='en', matc
         return f" {advice} "
     
     return f" {advice}"
+
+def generate_gemini_response(user_input, language='en', confidence=0.0):
+    """
+    Generate response using Google Gemini API when confidence is low.
+    Provides contextual, professional, and optimistic responses for on-demand services.
+    """
+    if not gemini_model:
+        if language == 'ar':
+            return "عذرًا، لم أتمكن من فهم طلبك بدقة. يرجى توضيح الخدمة التي تحتاجها (سباكة، كهرباء، تكييف، تنظيف)."
+        return "I couldn't determine the specific service you need with confidence. Could you please clarify if you need plumbing, electrical, HVAC, or cleaning services?"
+    
+    try:
+        # Craft a professional prompt for on-demand services context
+        if language == 'ar':
+            system_prompt = f"""أنت مساعد ذكي محترف ومتفائل لمنصة خدمات منزلية حسب الطلب.
+المستخدم قال: "{user_input}"
+
+السياق: نحن نقدم خدمات السباكة، الكهرباء، التكييف والتبريد، والتنظيف.
+
+مهمتك:
+1. فهم احتياج المستخدم بشكل إيجابي
+2. اقتراح الخدمة الأنسب من (السباكة، الكهرباء، التكييف، التنظيف)
+3. تقديم نصيحة عملية قصيرة ومفيدة
+4. تشجيع المستخدم على حجز الخدمة
+
+الرد يجب أن يكون:
+- محترف وودود
+- 2-3 جمل فقط
+- متفائل وإيجابي
+- يذكر الخدمة المناسبة بوضوح"""
+        else:
+            system_prompt = f"""You are a professional and optimistic AI assistant for an on-demand home services platform.
+User said: "{user_input}"
+
+Context: We provide plumbing, electrical, HVAC (air conditioning/heating), and cleaning services.
+
+Your task:
+1. Understand the user's need positively
+2. Suggest the most appropriate service from (plumbing, electrical, HVAC, cleaning)
+3. Provide concise, actionable advice
+4. Encourage the user to book the service
+
+Response should be:
+- Professional and friendly
+- 2-3 sentences maximum
+- Optimistic and positive
+- Clearly mention the appropriate service"""
+
+        response = gemini_model.generate_content(system_prompt)
+        
+        # Check if response was blocked
+        if not response:
+            print("⚠️ Gemini API returned no response")
+            if language == 'ar':
+                return "يبدو أنك تحتاج خدمة منزلية. يمكنك تصفح خدماتنا (سباكة، كهرباء، تكييف، تنظيف) واختيار الأنسب لك."
+            return "It seems you need a home service. You can browse our services (plumbing, electrical, HVAC, cleaning) and choose what fits your need."
+        
+        # Check if response was blocked by safety filters
+        if hasattr(response, 'prompt_feedback') and response.prompt_feedback.block_reason:
+            print(f"⚠️ Gemini API blocked response: {response.prompt_feedback.block_reason}")
+            if language == 'ar':
+                return "يبدو أنك تحتاج خدمة منزلية. يمكنك تصفح خدماتنا (سباكة، كهرباء، تكييف، تنظيف) واختيار الأنسب لك."
+            return "It seems you need a home service. You can browse our services (plumbing, electrical, HVAC, cleaning) and choose what fits your need."
+        
+        # Extract text safely
+        try:
+            gemini_text = response.text.strip() if hasattr(response, 'text') and response.text else None
+        except (ValueError, AttributeError) as text_error:
+            print(f"⚠️ Could not extract text from Gemini response: {text_error}")
+            gemini_text = None
+        
+        if gemini_text:
+            return gemini_text
+        else:
+            # Fallback if Gemini doesn't return valid response
+            if language == 'ar':
+                return "يبدو أنك تحتاج خدمة منزلية. يمكنك تصفح خدماتنا (سباكة، كهرباء، تكييف، تنظيف) واختيار الأنسب لك."
+            return "It seems you need a home service. You can browse our services (plumbing, electrical, HVAC, cleaning) and choose what fits your need."
+    
+    except Exception as e:
+        print(f"❌ Gemini API Error: {str(e)}")
+        # Graceful fallback
+        if language == 'ar':
+            return "نعتذر، واجهنا صعوبة في معالجة طلبك. يرجى توضيح الخدمة التي تحتاجها من (سباكة، كهرباء، تكييف، تنظيف)."
+        return "We had trouble processing your request. Please specify which service you need from (plumbing, electrical, HVAC, cleaning)."
 
 if __name__ == '__main__':
     # Run on port 5000 (different from Node.js port 4000)
