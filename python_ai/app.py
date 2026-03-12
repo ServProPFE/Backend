@@ -241,6 +241,32 @@ def health():
         'version': '1.0.0'
     }), 200
 
+@app.route('/services', methods=['GET'])
+def list_services():
+    """List all available services in the system"""
+    language = request.args.get('language', 'en')
+    
+    services_list = []
+    for service_key, service_data in SERVICES_DB.items():
+        services_list.append({
+            'key': service_key,
+            'name': service_data['service_name'],
+            'category': service_data['category'],
+            'keywords': service_data['keywords'][:5]  # Return top 5 keywords
+        })
+    
+    if language == 'ar':
+        response_text = "الخدمات المتاحة لدينا هي:"
+    else:
+        response_text = "Our available services are:"
+    
+    return jsonify({
+        'services': services_list,
+        'message': response_text,
+        'language': language,
+        'count': len(services_list)
+    }), 200
+
 @app.route('/recommend', methods=['POST'])
 def recommend():
     """
@@ -257,6 +283,40 @@ def recommend():
                 'error': 'Empty input',
                 'message': 'الرجاء توفير نص' if language == 'ar' else 'Please provide some text'
             }), 400
+        
+        # Check if user is asking for service list/information (generic query)
+        generic_service_keywords = [
+            'what', 'which', 'list', 'all', 'services', 'offer', 'provide', 'have', 'available', 'what are',
+            'ماذا', 'قائمة', 'خدمات', 'كل', 'توفيرون', 'تقدمون', 'لديكم', 'المتاحة'
+        ]
+        user_tokens = set(normalize_tokens(user_input))
+        generic_count = len(user_tokens & set(generic_service_keywords))
+        
+        # If query looks like asking for service list (has multiple generic terms)
+        if generic_count >= 2 and user_input.lower().count('?') > 0:
+            # Return list of services instead of trying to match
+            services_list = []
+            for service_key, service_data in SERVICES_DB.items():
+                services_list.append(service_data['service_name'])
+            
+            if language == 'ar':
+                services_str = '، '.join(services_list)
+                message = f"الخدمات المتاحة لدينا هي: {services_str}. أي خدمة تحتاج؟"
+            else:
+                services_str = ', '.join(services_list)
+                message = f"Our available services are: {services_str}. Which one do you need?"
+            
+            return jsonify({
+                'user_input': user_input,
+                'detected_service': None,
+                'confidence': 0.0,
+                'language': language,
+                'message': message,
+                'recommendations': [],
+                'source': 'services_list',
+                'fallback_used': False,
+                'all_scores': {}
+            }), 200
         
         # Get recommendation
         result = recommender.recommend_service(user_input)
@@ -309,9 +369,13 @@ def recommend():
         return jsonify(response), 200
 
     except Exception as e:
+        print(f"❌ Error in /recommend endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': str(e),
-            'message': 'حدث خطأ' if language == 'ar' else 'An error occurred'
+            'message': 'حدث خطأ في معالجة طلبك' if language == 'ar' else 'An error occurred processing your request',
+            'suggestions': [s['service_name'] for s in SERVICES_DB.values()]
         }), 500
 
 @app.route('/analyze', methods=['POST'])
@@ -479,7 +543,13 @@ Response should be:
 - Optimistic and positive
 - Clearly mention the appropriate service"""
 
-        response = gemini_model.generate_content(system_prompt)
+        try:
+            response = gemini_model.generate_content(system_prompt, request_options={"timeout": 8})
+        except Exception as timeout_error:
+            print(f"⚠️ Gemini timeout/request error: {timeout_error}")
+            if language == 'ar':
+                return "الخدمات المتاحة لدينا: السباكة، الكهرباء، التكييف، والتنظيف. أي منها تحتاج؟"
+            return "Our services include: plumbing, electrical, HVAC, and cleaning. Which one do you need?"
         
         # Check if response was blocked
         if not response:
@@ -502,7 +572,7 @@ Response should be:
             print(f"⚠️ Could not extract text from Gemini response: {text_error}")
             gemini_text = None
         
-        if gemini_text:
+        if gemini_text and len(gemini_text.strip()) > 0:
             return gemini_text
         else:
             # Fallback if Gemini doesn't return valid response
@@ -512,6 +582,8 @@ Response should be:
     
     except Exception as e:
         print(f"❌ Gemini API Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         # Graceful fallback
         if language == 'ar':
             return "نعتذر، واجهنا صعوبة في معالجة طلبك. يرجى توضيح الخدمة التي تحتاجها من (سباكة، كهرباء، تكييف، تنظيف)."
