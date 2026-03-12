@@ -85,7 +85,7 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   const booking = await Booking.findById(req.params.id)
     .populate('client', 'name email phone')
-    .populate('service', 'name')
+    .populate('service', 'name category')
     .populate('provider', 'name');
 
   if (!booking) {
@@ -151,7 +151,7 @@ const listBookings = asyncHandler(async (req, res) => {
 
   const bookings = await Booking.find(query)
     .populate('client', 'name email phone')
-    .populate('service', 'name')
+    .populate('service', 'name category')
     .populate('provider', 'name')
     .sort({ createdAt: -1 })
     .lean();
@@ -163,7 +163,7 @@ const listBookings = asyncHandler(async (req, res) => {
 const getBookingById = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id)
     .populate('client', 'name email phone')
-    .populate('service', 'name')
+    .populate('service', 'name category')
     .populate('provider', 'name')
     .lean();
   if (!booking) {
