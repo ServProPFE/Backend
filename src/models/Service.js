@@ -23,6 +23,7 @@ const serviceSchema = new mongoose.Schema(
     },
     priceMin: { type: Number, required: true },
     duration: { type: Number, required: true },
+    description: { type: String, default: "" },
     currency: { type: String, default: "TND" },
   },
   { timestamps: true }

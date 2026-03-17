@@ -42,6 +42,7 @@ const createService = asyncHandler(async (req, res) => {
     priceMin,
     priceMax,
     duration,
+    description,
     currency,
   } = req.body;
 
@@ -52,6 +53,7 @@ const createService = asyncHandler(async (req, res) => {
     priceMin,
     priceMax,
     duration,
+    description,
     currency,
   });
 
@@ -60,14 +62,22 @@ const createService = asyncHandler(async (req, res) => {
 
 //Mettre à jour un service
 const updateService = asyncHandler(async (req, res) => {
-  const { name, category, priceMin, priceMax, duration, currency } = req.body;
+  const { name, category, priceMin, priceMax, duration, description, currency } = req.body;
     const service = await Service.findById(req.params.id);
     if (!service) {
       const error = new Error("Service not found");
       error.statusCode = 404;
       throw error;
     }
-    Object.assign(service, { name, category, priceMin, priceMax, duration, currency });
+    Object.assign(service, {
+      name,
+      category,
+      priceMin,
+      priceMax,
+      duration,
+      description,
+      currency: currency || service.currency || "TND",
+    });
     await service.save();
     res.json(service);
 });
