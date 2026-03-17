@@ -13,6 +13,7 @@ Backend API for ServPro - an on-demand services platform connecting clients with
 - [Authentication & Authorization](#authentication--authorization)
 - [Database Models](#database-models)
 - [Development](#development)
+- [Testing](#testing)
 - [Scripts](#scripts)
 
 ## ✨ Features
@@ -102,6 +103,11 @@ ServProBackend/
   cd python_ai
   python -m pip install -r requirements.txt
   python app.py
+  ```
+
+7. **Run the backend unit tests**
+  ```bash
+  npm test
   ```
 
 ## ⚙️ Configuration
@@ -258,6 +264,38 @@ Authorization: Bearer <your_jwt_token>
 | POST   | `/packages`      | Yes           | ADMIN | Create package    |
 | PUT    | `/packages/:id`  | Yes           | ADMIN | Update package    |
 | DELETE | `/packages/:id`  | Yes           | ADMIN | Delete package    |
+
+## 🧪 Testing
+
+The backend uses Jest for unit testing. The current suite focuses on fast, reliable checks around middleware, route wiring, server startup, and selected controllers so the team can validate core behavior with confidence before moving to manual or integration testing.
+
+### What is covered today
+
+- Express app bootstrap and route registration
+- Server startup behavior and configuration validation
+- Error handling and async wrapper utilities
+- Health endpoint behavior
+- Authentication controller happy paths and failure paths
+- Service controller list, fetch, create, update, and delete flows
+
+### Run the tests
+
+```bash
+npm test
+```
+
+### Test philosophy
+
+- Keep tests focused on one unit at a time
+- Mock database and external service calls so results stay stable
+- Cover both the expected flow and the recovery path
+- Prefer readable assertions that explain business intent, not only implementation detail
+
+### Recommended next steps
+
+- Add controller tests for bookings, reviews, and transactions
+- Introduce API-level integration tests for critical routes
+- Add coverage reporting once the team agrees on a target threshold
 
 ### Additional Resources
 
