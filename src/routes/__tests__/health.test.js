@@ -1,3 +1,7 @@
+/**
+ * This test suite validates the functionality of the health route, 
+ * which is a simple endpoint designed to check the status of the application.
+ */
 const healthRouter = require("../health");
 
 describe("health route", () => {

@@ -1,3 +1,8 @@
+/**
+ * This test suite validates the functionality of the errorHandler middleware, which is responsible for handling errors that occur during request processing in the application.
+ * The tests cover scenarios where the error contains a specific status code and message, as well as the behavior of the middleware in different environments (test vs production).
+ * By simulating error conditions and verifying the responses, we can ensure that the errorHandler provides appropriate feedback to clients while maintaining security best practices by hiding stack traces in production.
+ */
 const { errorHandler } = require("../errorHandler");
 
 describe("errorHandler", () => {

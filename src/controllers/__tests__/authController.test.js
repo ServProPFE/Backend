@@ -1,3 +1,7 @@
+// This test suite covers the authentication controller's register and login functions, ensuring they handle various scenarios correctly.
+/*** The tests use Jest's mocking capabilities to simulate database interactions and external dependencies like bcrypt and jsonwebtoken, 
+ * allowing us to focus on the controller logic without relying on a real database or external services.
+ ***/
 const mockFindOne = jest.fn();
 const mockCreate = jest.fn();
 const mockHash = jest.fn();

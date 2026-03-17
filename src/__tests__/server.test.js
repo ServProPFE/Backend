@@ -10,6 +10,11 @@ describe("server startup", () => {
     process.env = originalEnv;
   });
 
+  /***Arrange-Act-Assert pattern is used in the tests to ensure clarity and maintainability. 
+   * Each test case is structured to first set up the necessary environment and mocks (Arrange), 
+   * then execute the code under test (Act), and finally verify the expected outcomes (Assert). 
+   * This approach helps in isolating the behavior being tested and makes it easier to understand the purpose of each step in the test.
+  ***/
   it("connects to the database and starts listening when configuration is valid", async () => {
     process.env.PORT = "4100";
     process.env.MONGODB_URI = "mongodb://localhost:27017/servpro-test";

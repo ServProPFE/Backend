@@ -1,3 +1,10 @@
+/** 
+ * This test suite validates the functionality of the servicesController, which manages CRUD operations for service entities in the application.
+ * The tests cover listing services with filters, retrieving a service by ID, creating a new service, updating an existing service, and deleting a service.
+ * Jest's mocking capabilities are utilized to simulate database interactions, allowing us to focus on the controller logic without relying on a real database.
+ * Each test case follows the Arrange-Act-Assert pattern to ensure clarity and maintainability.
+ * By verifying the expected outcomes for various scenarios, we can ensure that the servicesController behaves correctly and handles edge cases gracefully.
+*/
 const mockFind = jest.fn();
 const mockFindById = jest.fn();
 const mockCreate = jest.fn();

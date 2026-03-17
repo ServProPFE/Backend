@@ -1,9 +1,11 @@
 const mockUse = jest.fn();
 const mockJson = jest.fn(() => "json-middleware");
 
+// Mocking the Express app and its methods to test the app configuration without starting an actual server
 const mockExpress = jest.fn(() => ({ use: mockUse }));
 mockExpress.json = mockJson;
 
+// Mocking the database connection function to prevent actual database interactions during tests
 jest.mock("express", () => mockExpress);
 jest.mock("cors", () => jest.fn(() => "cors-middleware"));
 jest.mock("morgan", () => jest.fn(() => "morgan-middleware"));
