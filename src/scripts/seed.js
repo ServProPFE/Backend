@@ -1,7 +1,7 @@
 // Seed script to populate the database with sample data
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const path = require("path");
+const path = require("node:path");
 require("dotenv").config({ path: path.join(__dirname, "../../.env") });
 
 // Import models
@@ -11,7 +11,15 @@ const { Booking } = require("../models/Booking");
 const { ReservationDetail } = require("../models/ReservationDetail");
 const { Review } = require("../models/Review");
 const { Offer } = require("../models/Offer");
+const { Commission } = require("../models/Commission");
 const { Transaction } = require("../models/Transaction");
+const { Package } = require("../models/Package");
+const { Competence } = require("../models/Competence");
+const { Certification } = require("../models/Certification");
+const { Tracking } = require("../models/Tracking");
+const { Notation } = require("../models/Notation");
+const { Portfolio } = require("../models/Portfolio");
+const { Availability } = require("../models/Availability");
 
 // MongoDB connection
 const connectDB = async () => {
@@ -33,7 +41,15 @@ const clearDatabase = async () => {
   await ReservationDetail.deleteMany({});
   await Review.deleteMany({});
   await Offer.deleteMany({});
+  await Commission.deleteMany({});
   await Transaction.deleteMany({});
+  await Package.deleteMany({});
+  await Competence.deleteMany({});
+  await Certification.deleteMany({});
+  await Tracking.deleteMany({});
+  await Notation.deleteMany({});
+  await Portfolio.deleteMany({});
+  await Availability.deleteMany({});
   console.log("✅ Database cleared");
 };
 
@@ -155,7 +171,7 @@ const seedData = async () => {
     console.log(`✅ Created ${providers.length} providers`);
 
     // Create Admin
-    const admin = await User.create({
+    await User.create({
       type: "ADMIN",
       name: "Admin User",
       email: "admin@servpro.com",
@@ -291,6 +307,59 @@ const seedData = async () => {
       },
     ]);
     console.log(`✅ Created ${services.length} services`);
+
+    console.log("\n🖼️  Creating portfolios...");
+
+    const portfolios = await Portfolio.create([
+      {
+        title: "Kitchen Pipe Refurbishment",
+        images: [
+          "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
+          "https://images.unsplash.com/photo-1621905252472-e8f0fcf8f1b5",
+        ],
+        description: "Full replacement of damaged kitchen piping with leak-proof fittings.",
+        provider: providers[0]._id,
+      },
+      {
+        title: "Apartment Electrical Panel Upgrade",
+        images: [
+          "https://images.unsplash.com/photo-1621905251918-48416bd8575a",
+        ],
+        description: "Modernized circuit breakers and rewiring for improved electrical safety.",
+        provider: providers[1]._id,
+      },
+      {
+        title: "Split AC Installation",
+        images: [
+          "https://images.unsplash.com/photo-1581579186986-5a1863af95aa",
+        ],
+        description: "Installed and calibrated split AC unit with optimized airflow routing.",
+        provider: providers[2]._id,
+      },
+      {
+        title: "Post-Renovation Deep Cleaning",
+        images: [
+          "https://images.unsplash.com/photo-1585421514738-01798e348b17",
+        ],
+        description: "Detailed dust extraction, floor sanitization, and glass polishing.",
+        provider: providers[3]._id,
+      },
+    ]);
+    console.log(`✅ Created ${portfolios.length} portfolios`);
+
+    console.log("\n📆 Creating availability slots...");
+
+    const availability = await Availability.create([
+      { day: 1, start: "08:00", end: "17:00", provider: providers[0]._id },
+      { day: 3, start: "09:00", end: "18:00", provider: providers[0]._id },
+      { day: 2, start: "08:30", end: "16:30", provider: providers[1]._id },
+      { day: 4, start: "10:00", end: "19:00", provider: providers[1]._id },
+      { day: 1, start: "09:00", end: "17:30", provider: providers[2]._id },
+      { day: 5, start: "08:00", end: "14:00", provider: providers[2]._id },
+      { day: 0, start: "08:00", end: "13:00", provider: providers[3]._id },
+      { day: 6, start: "08:00", end: "15:00", provider: providers[4]._id },
+    ]);
+    console.log(`✅ Created ${availability.length} availability slots`);
 
     console.log("\n🎁 Creating offers...");
     
@@ -433,6 +502,143 @@ const seedData = async () => {
     ]);
     console.log(`✅ Created ${bookings.length} bookings`);
 
+    console.log("\n📦 Creating packages...");
+
+    const packages = await Package.create([
+      {
+        name: "Starter Home Care",
+        months: 3,
+        numberVisits: 3,
+        monthlyPrice: 99,
+      },
+      {
+        name: "Family Comfort",
+        months: 6,
+        numberVisits: 8,
+        monthlyPrice: 149,
+      },
+      {
+        name: "Premium Assist",
+        months: 12,
+        numberVisits: 18,
+        monthlyPrice: 219,
+      },
+    ]);
+    console.log(`✅ Created ${packages.length} packages`);
+
+    console.log("\n🧠 Creating competences...");
+
+    const competences = await Competence.create([
+      {
+        serviceId: String(services[0]._id),
+        level: "EXPERT",
+        provider: providers[0]._id,
+      },
+      {
+        serviceId: String(services[4]._id),
+        level: "EXPERT",
+        provider: providers[1]._id,
+      },
+      {
+        serviceId: String(services[7]._id),
+        level: "INTERMEDIATE",
+        provider: providers[2]._id,
+      },
+      {
+        serviceId: String(services[9]._id),
+        level: "EXPERT",
+        provider: providers[3]._id,
+      },
+      {
+        serviceId: String(services[13]._id),
+        level: "INTERMEDIATE",
+        provider: providers[4]._id,
+      },
+    ]);
+    console.log(`✅ Created ${competences.length} competences`);
+
+    console.log("\n🎓 Creating certifications...");
+
+    const certifications = await Certification.create([
+      {
+        name: "Certified Plumbing Technician",
+        authority: "Tunisia Skilled Trades Board",
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        provider: providers[0]._id,
+      },
+      {
+        name: "Electrical Safety Specialist",
+        authority: "National Electrical Institute",
+        expiresAt: new Date(Date.now() + 540 * 24 * 60 * 60 * 1000),
+        provider: providers[1]._id,
+      },
+      {
+        name: "HVAC Maintenance Pro",
+        authority: "Cooling Systems Academy",
+        expiresAt: new Date(Date.now() + 480 * 24 * 60 * 60 * 1000),
+        provider: providers[2]._id,
+      },
+      {
+        name: "Professional Cleaning Operator",
+        authority: "Home Services Council",
+        expiresAt: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        provider: providers[3]._id,
+      },
+    ]);
+    console.log(`✅ Created ${certifications.length} certifications`);
+
+    console.log("\n📍 Creating tracking points...");
+
+    const tracking = await Tracking.create([
+      {
+        booking: bookings[1]._id,
+        position: "Provider left workshop",
+        at: new Date(Date.now() - 30 * 60 * 1000),
+      },
+      {
+        booking: bookings[3]._id,
+        position: "Provider arrived at customer location",
+        at: new Date(Date.now() - 10 * 60 * 1000),
+      },
+      {
+        booking: bookings[5]._id,
+        position: "Service in progress",
+        at: new Date(Date.now() - 5 * 60 * 1000),
+      },
+    ]);
+    console.log(`✅ Created ${tracking.length} tracking points`);
+
+    console.log("\n🧮 Creating notations...");
+
+    const notations = await Notation.create([
+      {
+        average: 4.8,
+        total: 29,
+        provider: providers[0]._id,
+      },
+      {
+        average: 4.6,
+        total: 22,
+        provider: providers[1]._id,
+      },
+      {
+        average: 4.7,
+        total: 17,
+        provider: providers[2]._id,
+      },
+      {
+        average: 4.5,
+        total: 26,
+        provider: providers[3]._id,
+      },
+      {
+        average: 4.4,
+        total: 14,
+        provider: providers[4]._id,
+      },
+    ]);
+    console.log(`✅ Created ${notations.length} notations`);
+
     console.log("\n⭐ Creating reviews...");
     
     // Create reviews for completed bookings
@@ -453,6 +659,32 @@ const seedData = async () => {
       },
     ]);
     console.log(`✅ Created ${reviews.length} reviews`);
+
+    console.log("\n💼 Creating commissions...");
+
+    const commissions = await Commission.create([
+      {
+        booking: bookings[0]._id,
+        percentage: 15,
+        amount: Number((bookings[0].totalPrice * 0.15).toFixed(2)),
+      },
+      {
+        booking: bookings[1]._id,
+        percentage: 12,
+        amount: Number((bookings[1].totalPrice * 0.12).toFixed(2)),
+      },
+      {
+        booking: bookings[2]._id,
+        percentage: 10,
+        amount: Number((bookings[2].totalPrice * 0.1).toFixed(2)),
+      },
+      {
+        booking: bookings[5]._id,
+        percentage: 14,
+        amount: Number((bookings[5].totalPrice * 0.14).toFixed(2)),
+      },
+    ]);
+    console.log(`✅ Created ${commissions.length} commissions`);
 
     console.log("\n💳 Creating transactions...");
     
@@ -498,9 +730,17 @@ const seedData = async () => {
     console.log(`   • ${providers.length} Providers`);
     console.log(`   • 1 Admin`);
     console.log(`   • ${services.length} Services`);
+    console.log(`   • ${portfolios.length} Portfolios`);
+    console.log(`   • ${availability.length} Availability slots`);
     console.log(`   • ${offers.length} Offers`);
+    console.log(`   • ${packages.length} Packages`);
+    console.log(`   • ${competences.length} Competences`);
+    console.log(`   • ${certifications.length} Certifications`);
+    console.log(`   • ${tracking.length} Tracking points`);
+    console.log(`   • ${notations.length} Notations`);
     console.log(`   • ${bookings.length} Bookings`);
     console.log(`   • ${reviews.length} Reviews`);
+    console.log(`   • ${commissions.length} Commissions`);
     console.log(`   • ${transactions.length} Transactions`);
     
     console.log("\n🔐 Login Credentials:");
