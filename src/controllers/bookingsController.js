@@ -1,11 +1,38 @@
 //Importer les modeles et les utilitaires nécessaires
 const { Booking } = require("../models/Booking");
 const { Transaction } = require("../models/Transaction");
+const { Invoice } = require("../models/Invoice");
 const { Service } = require("../models/Service");
 const { Offer } = require("../models/Offer");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 const roundTo2 = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const generateInvoiceNumber = () => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const random = String(Math.floor(1000 + Math.random() * 9000));
+  return `INV-${y}${m}${d}-${random}`;
+};
+
+const ensureInvoiceForBooking = async (bookingDoc) => {
+  if (!bookingDoc || !["CONFIRMED", "DONE"].includes(bookingDoc.status)) {
+    return;
+  }
+
+  const existingInvoice = await Invoice.findOne({ booking: bookingDoc._id }).select("_id").lean();
+  if (existingInvoice) {
+    return;
+  }
+
+  await Invoice.create({
+    number: generateInvoiceNumber(),
+    total: bookingDoc.totalPrice,
+    booking: bookingDoc._id,
+  });
+};
 
 const getBookingPriceWithOffer = async (serviceId) => {
   const serviceDoc = await Service.findById(serviceId).lean();
@@ -77,6 +104,12 @@ const createBooking = asyncHandler(async (req, res) => {
     }
   }
 
+  try {
+    await ensureInvoiceForBooking(booking);
+  } catch (invoiceError) {
+    console.error('Failed to create invoice:', invoiceError);
+  }
+
   res.status(201).json(booking);
 });
 
@@ -118,6 +151,12 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
       // Log error but don't fail the booking status update
       console.error('Failed to create transaction:', transactionError);
     }
+  }
+
+  try {
+    await ensureInvoiceForBooking(booking);
+  } catch (invoiceError) {
+    console.error('Failed to create invoice:', invoiceError);
   }
 
   res.json(booking);
