@@ -17,7 +17,7 @@ pipeline{
             steps{
                 echo 'Dockerising the application...'
                 // Add Dockerisation steps here
-                bat 'docker compose up -d'
+                bat 'docker compose up -d --build --force-recreate'
             }
         }
     }
