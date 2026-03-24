@@ -1,22 +1,74 @@
-### Building and running your application
+# ServPro Backend - Docker Guide
 
-When you're ready, start your application by running:
-`docker compose up --build`.
+Ce dossier contient une stack Docker Compose complete pour le backend ServPro:
+- MongoDB
+- Python AI service
+- API backend Node.js
 
-Your application will be available at http://localhost:4000.
+## Prerequis
 
-### Deploying your application to the cloud
+- Docker Desktop (avec Compose v2)
 
-First, build your image, e.g.: `docker build -t myapp .`.
-If your cloud uses a different CPU architecture than your development
-machine (e.g., you are on a Mac M1 and your cloud provider is amd64),
-you'll want to build the image for that platform, e.g.:
-`docker build --platform=linux/amd64 -t myapp .`.
+## Lancer la stack
 
-Then, push it to your registry, e.g. `docker push myregistry.com/myapp`.
+Depuis `ServProBackend/`:
 
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
+```bash
+docker compose up --build
+```
 
-### References
-* [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+Services exposes localement:
+- Backend: `http://localhost:4000`
+- Python AI: `http://localhost:5000`
+- MongoDB: `mongodb://localhost:27017`
+
+## Arreter et nettoyer
+
+```bash
+docker compose down
+```
+
+Supprimer aussi les volumes (base Mongo):
+
+```bash
+docker compose down -v
+```
+
+## Endpoints de verification
+
+- Backend health: `GET http://localhost:4000/health`
+- Chatbot health (Node -> Python): `GET http://localhost:4000/chatbot/health`
+- Python AI health: `GET http://localhost:5000/health`
+
+## Variables d'environnement appliquees en compose
+
+Le service `backend` surcharge:
+
+- `PORT=4000`
+- `MONGODB_URI=mongodb://mongodb:27017/servpro`
+- `PYTHON_AI_SERVICE=http://python-ai:5000`
+- `NODE_ENV=development`
+
+Le service `python-ai` charge `python_ai/.env.example`.
+
+## Build image backend seule
+
+Depuis `ServProBackend/`:
+
+```bash
+docker build -t servpro-backend:latest .
+docker run --rm -p 4000:4000 --env-file .env servpro-backend:latest
+```
+
+## Troubleshooting
+
+1. Le backend ne demarre pas:
+- verifier `docker compose logs backend`
+- verifier que MongoDB est healthy
+
+2. Chatbot en statut degrade:
+- verifier `docker compose logs python-ai`
+- verifier `PYTHON_AI_SERVICE` dans l'environnement backend
+
+3. Port deja occupe:
+- changer le mapping de ports dans `compose.yaml`

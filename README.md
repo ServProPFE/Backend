@@ -64,7 +64,7 @@ ServProBackend/
 
 ### Prerequisites
 
-- Node.js >= 16.x
+- Node.js >= 20.x
 - MongoDB >= 5.x (local or MongoDB Atlas)
 - npm or yarn
 
@@ -121,6 +121,7 @@ NODE_ENV=development
 JWT_SECRET=your_super_secret_key_change_this
 JWT_EXPIRES_IN=7d
 PYTHON_AI_SERVICE=http://localhost:5000
+GEMINI_API_KEY=your_api_key_optional
 ```
 
 ### Environment Variables
@@ -133,6 +134,7 @@ PYTHON_AI_SERVICE=http://localhost:5000
 | `JWT_SECRET`   | Secret key for JWT signing           | *Required*                        |
 | `JWT_EXPIRES_IN` | Token expiration time              | `7d`                              |
 | `PYTHON_AI_SERVICE` | Python chatbot service base URL | `http://localhost:5000`          |
+| `GEMINI_API_KEY` | Optional fallback model API key for Python AI service | *Optional* |
 
 ## 📚 API Documentation
 
@@ -210,7 +212,7 @@ Authorization: Bearer <your_jwt_token>
 
 | Method | Endpoint              | Auth Required | Roles                     | Description                    |
 |--------|------------------------|---------------|---------------------------|--------------------------------|
-| GET    | `/transactions`        | Yes           | CLIENT, PROVIDER, ADMIN   | List all transactions          |
+| GET    | `/transactions`        | Yes           | CLIENT, ADMIN             | List all transactions          |
 | POST   | `/transactions`        | Yes           | CLIENT                    | Create transaction             |
 | PUT    | `/transactions/:id`    | Yes           | ADMIN                     | Update transaction status      |
 | DELETE | `/transactions/:id`    | Yes           | ADMIN                     | Delete transaction             |
@@ -469,11 +471,13 @@ curl -X POST http://localhost:4000/bookings \
 
 ## 📜 Scripts
 
-| Command          | Description                              |
-|------------------|------------------------------------------|
-| `npm start`      | Start production server                  |
-| `npm run dev`    | Start development server with nodemon    |
-| `npm test`       | Run tests (not yet implemented)          |
+| Command              | Description                                   |
+|----------------------|-----------------------------------------------|
+| `npm start`          | Start production server                       |
+| `npm run dev`        | Start development server with nodemon         |
+| `npm run seed`       | Reset and seed local database with test data  |
+| `npm test`           | Run Jest tests in-band                        |
+| `npm run test:coverage` | Run Jest with coverage report             |
 
 ## 🤝 Contributing
 
