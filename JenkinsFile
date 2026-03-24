@@ -4,7 +4,7 @@ pipeline{
         stage('Checkout'){
             steps{
                 echo 'Building...'
-                git('https://github.com/ServProPFE/Backend.git')
+                git('https://github.com/ServProPFE/Backend/main')
             }
         }
         stage('Install Dependencies'){
