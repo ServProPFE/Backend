@@ -3,7 +3,7 @@ pipeline{
     stages{
         stage('Checkout'){
             steps{
-                echo 'Building...'
+                echo 'Repo Checkout...'
                 git('https://github.com/ServProPFE/Backend/main')
             }
         }
