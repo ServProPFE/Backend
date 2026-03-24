@@ -1,0 +1,30 @@
+pipeline{
+    agent any
+    stages{
+        stage('Checkout'){
+            steps{
+                echo 'Building...'
+                git('https://github.com/ServProPFE/Backend.git')
+            }
+        }
+        stage('Install Dependencies'){
+            steps{
+                echo 'Installing dependencies...'
+                bat 'npm install'
+            }
+        }
+        stage('Test'){
+            steps{
+                echo 'Running tests...'
+                bat 'npm run test:coverage'
+            }
+        }
+        stage('Dockerisation'){
+            steps{
+                echo 'Dockerising the application...'
+                // Add Dockerisation steps here
+                bat 'docker compose up -d'
+            }
+        }
+    }
+}
