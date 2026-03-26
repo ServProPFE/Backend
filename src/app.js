@@ -28,7 +28,39 @@ const chatbotRoutes = require("./routes/chatbot");
 const app = express();
 
 //Configurer les middlewares
-app.use(cors());
+const defaultAllowedOrigins = [
+	"https://dashboard.servpro.tn",
+	"https://app.servpro.tn",
+	"https://dashboard.servpro.local",
+	"https://app.servpro.local",
+	"http://localhost:5173",
+	"http://localhost:5174",
+];
+
+const allowedOrigins = new Set(
+	(process.env.CORS_ORIGINS || defaultAllowedOrigins.join(","))
+	.split(",")
+	.map((origin) => origin.trim())
+	.filter(Boolean)
+);
+
+const corsOptions = {
+	origin: (origin, callback) => {
+		// Allow server-to-server and CLI requests that do not send Origin.
+		if (!origin || allowedOrigins.has(origin)) {
+			callback(null, true);
+			return;
+		}
+
+		callback(new Error(`CORS blocked for origin: ${origin}`));
+	},
+	methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true,
+	optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
 
