@@ -1,24 +1,84 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-        stage('Install Dependencies'){
-            steps{
+
+    environment {
+        IMAGE_NAME = 'servpro-backend'
+        IMAGE_TAG = 'latest'
+        CONTAINER_NAME = 'servpro-backend-ci'
+        DEPLOY_K8S = 'false'
+    }
+
+    stages {
+        stage('Install Dependencies') {
+            steps {
                 echo 'Installing dependencies...'
-                bat 'npm install'
+                bat 'npm ci'
             }
         }
-        stage('Test'){
-            steps{
+
+        stage('Test') {
+            steps {
                 echo 'Running tests...'
-                bat 'npm run test:coverage'
+                bat 'npm test'
             }
         }
-        stage('Dockerisation'){
-            steps{
-                echo 'Dockerising the application...'
-                // Add Dockerisation steps here
-                bat 'docker compose up -d --build --force-recreate'
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building backend image...'
+                bat 'docker build -t %IMAGE_NAME%:%IMAGE_TAG% .'
             }
+        }
+
+        stage('Smoke Test Container') {
+            steps {
+                bat 'docker rm -f %CONTAINER_NAME% || ver > nul'
+                bat 'docker run -d --name %CONTAINER_NAME% -p 4000:4000 %IMAGE_NAME%:%IMAGE_TAG%'
+                powershell '''
+                    $url = "http://localhost:4000/health"
+                    $maxAttempts = 12
+                    $delaySeconds = 5
+                    $ready = $false
+
+                    for ($i = 1; $i -le $maxAttempts; $i++) {
+                        try {
+                            $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 5
+                            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+                                $ready = $true
+                                Write-Host "Backend is reachable on attempt $i with status $($response.StatusCode)."
+                                break
+                            }
+                        } catch {
+                            Write-Host "Attempt $i/$maxAttempts failed: $($_.Exception.Message)"
+                        }
+
+                        Start-Sleep -Seconds $delaySeconds
+                    }
+
+                    if (-not $ready) {
+                        docker logs ${env:CONTAINER_NAME}
+                        throw "Backend container is not reachable on $url"
+                    }
+                '''
+            }
+        }
+
+        stage('Deploy To Kubernetes') {
+            when {
+                expression { env.DEPLOY_K8S == 'true' }
+            }
+            steps {
+                echo 'Applying Kubernetes manifests and restarting backend deployment...'
+                bat 'kubectl apply -k ..\\k8s'
+                bat 'kubectl rollout restart deployment/backend -n servpro'
+                bat 'kubectl rollout status deployment/backend -n servpro --timeout=180s'
+            }
+        }
+    }
+
+    post {
+        always {
+            bat 'docker rm -f %CONTAINER_NAME% || ver > nul'
         }
     }
 }
