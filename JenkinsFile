@@ -5,6 +5,8 @@ pipeline {
         IMAGE_NAME = 'servpro-backend'
         IMAGE_TAG = 'latest'
         CONTAINER_NAME = 'servpro-backend-ci'
+        MONGO_CONTAINER_NAME = 'servpro-mongodb-ci'
+        CI_DOCKER_NETWORK = 'servpro-ci-net'
         DEPLOY_K8S = 'false'
     }
 
@@ -32,8 +34,13 @@ pipeline {
 
         stage('Smoke Test Container') {
             steps {
+                bat 'docker rm -f %MONGO_CONTAINER_NAME% || ver > nul'
                 bat 'docker rm -f %CONTAINER_NAME% || ver > nul'
-                bat 'docker run -d --name %CONTAINER_NAME% -p 4000:4000 %IMAGE_NAME%:%IMAGE_TAG%'
+                bat 'docker network rm %CI_DOCKER_NETWORK% || ver > nul'
+                bat 'docker network create %CI_DOCKER_NETWORK%'
+                bat 'docker run -d --name %MONGO_CONTAINER_NAME% --network %CI_DOCKER_NETWORK% mongo:7'
+                bat 'powershell -NoProfile -Command "Start-Sleep -Seconds 10"'
+                bat 'docker run -d --name %CONTAINER_NAME% --network %CI_DOCKER_NETWORK% -e MONGODB_URI=mongodb://%MONGO_CONTAINER_NAME%:27017/servpro -e JWT_SECRET=ci-smoke-secret -p 4000:4000 %IMAGE_NAME%:%IMAGE_TAG%'
                 powershell '''
                     $url = "http://localhost:4000/health"
                     $maxAttempts = 12
@@ -56,6 +63,7 @@ pipeline {
                     }
 
                     if (-not $ready) {
+                        docker logs ${env:MONGO_CONTAINER_NAME}
                         docker logs ${env:CONTAINER_NAME}
                         throw "Backend container is not reachable on $url"
                     }
@@ -78,7 +86,9 @@ pipeline {
 
     post {
         always {
+            bat 'docker rm -f %MONGO_CONTAINER_NAME% || ver > nul'
             bat 'docker rm -f %CONTAINER_NAME% || ver > nul'
+            bat 'docker network rm %CI_DOCKER_NETWORK% || ver > nul'
         }
     }
 }
