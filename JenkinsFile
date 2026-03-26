@@ -90,16 +90,25 @@ pipeline {
                         powershell '''
                             $ErrorActionPreference = "Stop"
 
-                            if ("${params.K8S_CONTEXT}" -ne "") {
-                                kubectl config use-context "${params.K8S_CONTEXT}"
+                            function Invoke-Kubectl {
+                                param([string]$Args)
+                                Write-Host "> kubectl $Args"
+                                & kubectl $Args.Split(' ')
+                                if ($LASTEXITCODE -ne 0) {
+                                    throw "kubectl failed: kubectl $Args"
+                                }
                             }
 
-                            kubectl version --client
-                            kubectl cluster-info
-                            kubectl get namespace ${env.K8S_NAMESPACE}
-                            kubectl set image deployment/${env.K8S_DEPLOYMENT} ${env.K8S_CONTAINER}=${env.IMAGE_NAME}:${env.IMAGE_TAG} -n ${env.K8S_NAMESPACE}
-                            kubectl rollout restart deployment/${env.K8S_DEPLOYMENT} -n ${env.K8S_NAMESPACE}
-                            kubectl rollout status deployment/${env.K8S_DEPLOYMENT} -n ${env.K8S_NAMESPACE} --timeout=180s
+                            if ("${params.K8S_CONTEXT}" -ne "") {
+                                Invoke-Kubectl "config use-context ${params.K8S_CONTEXT}"
+                            }
+
+                            Invoke-Kubectl "version --client"
+                            Invoke-Kubectl "cluster-info"
+                            Invoke-Kubectl "get namespace $env:K8S_NAMESPACE"
+                            Invoke-Kubectl "set image deployment/$env:K8S_DEPLOYMENT $env:K8S_CONTAINER=$env:IMAGE_NAME:$env:IMAGE_TAG -n $env:K8S_NAMESPACE"
+                            Invoke-Kubectl "rollout restart deployment/$env:K8S_DEPLOYMENT -n $env:K8S_NAMESPACE"
+                            Invoke-Kubectl "rollout status deployment/$env:K8S_DEPLOYMENT -n $env:K8S_NAMESPACE --timeout=180s"
                         '''
                     }
 
