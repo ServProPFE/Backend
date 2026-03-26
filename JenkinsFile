@@ -1,13 +1,19 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(name: 'DEPLOY_K8S', defaultValue: true, description: 'Deploy image to Kubernetes after successful smoke test')
+    }
+
     environment {
         IMAGE_NAME = 'servpro-backend'
         IMAGE_TAG = 'latest'
         CONTAINER_NAME = 'servpro-backend-ci'
         MONGO_CONTAINER_NAME = 'servpro-mongodb-ci'
         CI_DOCKER_NETWORK = 'servpro-ci-net'
-        DEPLOY_K8S = 'false'
+        K8S_NAMESPACE = 'servpro'
+        K8S_DEPLOYMENT = 'backend'
+        K8S_CONTAINER = 'backend'
     }
 
     stages {
@@ -73,13 +79,14 @@ pipeline {
 
         stage('Deploy To Kubernetes') {
             when {
-                expression { env.DEPLOY_K8S == 'true' }
+                expression { params.DEPLOY_K8S }
             }
             steps {
-                echo 'Applying Kubernetes manifests and restarting backend deployment...'
-                bat 'kubectl apply -k ..\\k8s'
-                bat 'kubectl rollout restart deployment/backend -n servpro'
-                bat 'kubectl rollout status deployment/backend -n servpro --timeout=180s'
+                echo 'Deploying backend image to Kubernetes...'
+                bat 'kubectl get namespace %K8S_NAMESPACE%'
+                bat 'kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_CONTAINER%=%IMAGE_NAME%:%IMAGE_TAG% -n %K8S_NAMESPACE%'
+                bat 'kubectl rollout restart deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE%'
+                bat 'kubectl rollout status deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE% --timeout=180s'
             }
         }
     }
