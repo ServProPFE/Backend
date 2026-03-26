@@ -3,6 +3,8 @@ pipeline {
 
     parameters {
         booleanParam(name: 'DEPLOY_K8S', defaultValue: true, description: 'Deploy image to Kubernetes after successful smoke test')
+        string(name: 'KUBECONFIG_CREDENTIAL_ID', defaultValue: '', description: 'Optional Jenkins File credential ID for kubeconfig (leave empty to use agent default context)')
+        string(name: 'K8S_CONTEXT', defaultValue: '', description: 'Optional kubectl context name to use before deploy')
     }
 
     environment {
@@ -83,10 +85,34 @@ pipeline {
             }
             steps {
                 echo 'Deploying backend image to Kubernetes...'
-                bat 'kubectl get namespace %K8S_NAMESPACE%'
-                bat 'kubectl set image deployment/%K8S_DEPLOYMENT% %K8S_CONTAINER%=%IMAGE_NAME%:%IMAGE_TAG% -n %K8S_NAMESPACE%'
-                bat 'kubectl rollout restart deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE%'
-                bat 'kubectl rollout status deployment/%K8S_DEPLOYMENT% -n %K8S_NAMESPACE% --timeout=180s'
+                script {
+                    def runDeploy = {
+                        powershell '''
+                            $ErrorActionPreference = "Stop"
+
+                            if ("${params.K8S_CONTEXT}" -ne "") {
+                                kubectl config use-context "${params.K8S_CONTEXT}"
+                            }
+
+                            kubectl version --client
+                            kubectl cluster-info
+                            kubectl get namespace ${env.K8S_NAMESPACE}
+                            kubectl set image deployment/${env.K8S_DEPLOYMENT} ${env.K8S_CONTAINER}=${env.IMAGE_NAME}:${env.IMAGE_TAG} -n ${env.K8S_NAMESPACE}
+                            kubectl rollout restart deployment/${env.K8S_DEPLOYMENT} -n ${env.K8S_NAMESPACE}
+                            kubectl rollout status deployment/${env.K8S_DEPLOYMENT} -n ${env.K8S_NAMESPACE} --timeout=180s
+                        '''
+                    }
+
+                    if (params.KUBECONFIG_CREDENTIAL_ID?.trim()) {
+                        withCredentials([file(credentialsId: params.KUBECONFIG_CREDENTIAL_ID.trim(), variable: 'KUBECONFIG_FILE')]) {
+                            withEnv(["KUBECONFIG=${env.KUBECONFIG_FILE}"]) {
+                                runDeploy()
+                            }
+                        }
+                    } else {
+                        runDeploy()
+                    }
+                }
             }
         }
     }
