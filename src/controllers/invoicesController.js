@@ -1,5 +1,6 @@
 //Importer les modeles et les utilitaires nécessaires
 const { Invoice } = require("../models/Invoice");
+const { Booking } = require("../models/Booking");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 //Lister les factures avec un filtre optionnel
@@ -7,7 +8,28 @@ const listInvoices = asyncHandler(async (req, res) => {
   const { bookingId } = req.query;
   const query = {};
 
-  if (bookingId) {
+  const providerId = (req.user?.id || req.user?._id || "").toString();
+
+  if (req.user?.type === "PROVIDER") {
+    const providerBookings = await Booking.find({ provider: providerId }).select("_id").lean();
+    const providerBookingIds = providerBookings.map((booking) => booking._id);
+    const providerBookingIdSet = new Set(providerBookingIds.map((id) => id.toString()));
+
+    if (providerBookingIds.length === 0) {
+      return res.json({ items: [] });
+    }
+
+    if (bookingId) {
+      if (!providerBookingIdSet.has(bookingId.toString())) {
+        return res.json({ items: [] });
+      }
+      query.booking = bookingId;
+    } else {
+      query.booking = { $in: providerBookingIds };
+    }
+  }
+
+  if (bookingId && req.user?.type !== "PROVIDER") {
     query.booking = bookingId;
   }
 
@@ -23,15 +45,6 @@ const listInvoices = asyncHandler(async (req, res) => {
     })
     .sort({ createdAt: -1 })
     .lean();
-
-  if (req.user?.type === "PROVIDER") {
-    const providerId = (req.user.id || req.user._id || '').toString();
-    invoices = invoices.filter((invoice) => {
-      const bookingProvider = invoice.booking?.provider;
-      const bookingProviderId = (bookingProvider?._id || bookingProvider || '').toString();
-      return bookingProviderId === providerId;
-    });
-  }
 
   res.json({ items: invoices });
 });

@@ -47,7 +47,10 @@ const allowedOrigins = new Set(
 const corsOptions = {
 	origin: (origin, callback) => {
 		// Allow server-to-server and CLI requests that do not send Origin.
-		if (!origin || allowedOrigins.has(origin)) {
+		const isTrustedServproOrigin = /^https:\/\/[a-z0-9-]+\.servpro\.(tn|local)$/i.test(origin || "");
+		const isTrustedLocalhost = /^http:\/\/localhost(?::\d+)?$/i.test(origin || "");
+
+		if (!origin || allowedOrigins.has(origin) || isTrustedServproOrigin || isTrustedLocalhost) {
 			callback(null, true);
 			return;
 		}
@@ -61,6 +64,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
 
