@@ -590,8 +590,11 @@ Response should be:
         return "We had trouble processing your request. Please specify which service you need from (plumbing, electrical, HVAC, cleaning)."
 
 if __name__ == '__main__':
-    # Run on port 5000 (different from Node.js port 4000)
+    # Use platform-assigned port (Render/containers) with local fallback.
+    port = int(os.environ.get('PORT', 5000))
+    host = os.environ.get('HOST', '0.0.0.0')
+
     print("🤖 Starting Python AI Chatbot Service...")
-    print("📍 Python AI Service running on http://localhost:5000")
+    print(f"📍 Python AI Service running on http://{host}:{port}")
     print("   No ML libraries required - Pure Python TF-IDF!")
-    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    app.run(debug=False, host=host, port=port, use_reloader=False)
