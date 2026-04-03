@@ -3,6 +3,8 @@ pipeline {
 
     parameters {
         booleanParam(name: 'DEPLOY_K8S', defaultValue: true, description: 'Deploy image to Kubernetes after successful smoke test')
+        booleanParam(name: 'DEPLOY_RENDER', defaultValue: true, description: 'Trigger Render deployment after successful smoke test')
+        string(name: 'RENDER_DEPLOY_HOOK_CREDENTIAL_ID', defaultValue: '', description: 'Optional Jenkins secret text credential ID for the Render deploy hook URL')
         string(name: 'KUBECONFIG_CREDENTIAL_ID', defaultValue: '', description: 'Optional Jenkins File credential ID for kubeconfig (leave empty to use agent default context)')
         string(name: 'K8S_CONTEXT', defaultValue: '', description: 'Optional kubectl context name to use before deploy')
     }
@@ -121,6 +123,52 @@ pipeline {
                     } else {
                         runDeploy()
                     }
+                }
+            }
+        }
+
+        stage('Deploy To Render') {
+            when {
+                allOf {
+                    expression { params.DEPLOY_RENDER }
+                    expression { params.RENDER_DEPLOY_HOOK_CREDENTIAL_ID?.trim() }
+                }
+            }
+            steps {
+                echo 'Triggering Render deployment for backend...'
+                withCredentials([string(credentialsId: params.RENDER_DEPLOY_HOOK_CREDENTIAL_ID.trim(), variable: 'RENDER_DEPLOY_HOOK_URL')]) {
+                    powershell '''
+                        $ErrorActionPreference = "Stop"
+
+                        function Invoke-RenderDeployHook {
+                            param([string]$Url)
+
+                            if ([string]::IsNullOrWhiteSpace($Url)) {
+                                throw "Render deploy hook URL is empty"
+                            }
+
+                            for ($i = 1; $i -le 3; $i++) {
+                                try {
+                                    $response = Invoke-WebRequest -Uri $Url -Method Post -UseBasicParsing -TimeoutSec 60
+                                    if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
+                                        Write-Host "Render deployment triggered successfully on attempt $i."
+                                        return
+                                    }
+
+                                    throw "Unexpected Render response status: $($response.StatusCode)"
+                                } catch {
+                                    Write-Host "Render deploy attempt $i failed: $($_.Exception.Message)"
+                                    if ($i -eq 3) {
+                                        throw
+                                    }
+
+                                    Start-Sleep -Seconds 5
+                                }
+                            }
+                        }
+
+                        Invoke-RenderDeployHook -Url $env:RENDER_DEPLOY_HOOK_URL
+                    '''
                 }
             }
         }
