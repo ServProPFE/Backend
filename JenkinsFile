@@ -81,64 +81,6 @@ pipeline {
             }
         }
 
-        stage('Deploy To Kubernetes') {
-            when {
-                expression { params.DEPLOY_K8S }
-            }
-            steps {
-                echo 'Deploying backend image to Kubernetes...'
-                script {
-                    def runDeploy = {
-                        powershell '''
-                            $ErrorActionPreference = "Stop"
-
-                            function Invoke-Kubectl {
-                                param([string]$KubectlArgs)
-                                Write-Host "> kubectl $KubectlArgs"
-                                & kubectl @($KubectlArgs.Split(' '))
-                                if ($LASTEXITCODE -ne 0) {
-                                    throw "kubectl failed: kubectl $KubectlArgs"
-                                }
-                            }
-
-                            if ("${params.K8S_CONTEXT}" -ne "") {
-                                Invoke-Kubectl "config use-context ${params.K8S_CONTEXT}"
-                            }
-
-                            Invoke-Kubectl "version --client"
-                            try {
-                                Invoke-Kubectl "cluster-info"
-                            } catch {
-                                Write-Host "cluster-info failed, collecting cluster-info dump for diagnostics..."
-                                try {
-                                    Invoke-Kubectl "cluster-info dump --all-namespaces --ignore-errors"
-                                } catch {
-                                    Write-Host "cluster-info dump also failed: $($_.Exception.Message)"
-                                }
-
-                                throw
-                            }
-
-                            Invoke-Kubectl "get namespace $env:K8S_NAMESPACE"
-                            Invoke-Kubectl "set image deployment/$env:K8S_DEPLOYMENT $env:K8S_CONTAINER=$env:IMAGE_NAME:$env:IMAGE_TAG -n $env:K8S_NAMESPACE"
-                            Invoke-Kubectl "rollout restart deployment/$env:K8S_DEPLOYMENT -n $env:K8S_NAMESPACE"
-                            Invoke-Kubectl "rollout status deployment/$env:K8S_DEPLOYMENT -n $env:K8S_NAMESPACE --timeout=180s"
-                        '''
-                    }
-
-                    if (params.KUBECONFIG_CREDENTIAL_ID?.trim()) {
-                        withCredentials([file(credentialsId: params.KUBECONFIG_CREDENTIAL_ID.trim(), variable: 'KUBECONFIG_FILE')]) {
-                            withEnv(['KUBECONFIG=' + env.KUBECONFIG_FILE]) {
-                                runDeploy()
-                            }
-                        }
-                    } else {
-                        runDeploy()
-                    }
-                }
-            }
-        }
-
         stage('Deploy To Render') {
             when {
                 allOf {
