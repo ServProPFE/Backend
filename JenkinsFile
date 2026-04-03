@@ -6,6 +6,11 @@ pipeline {
         string(name: 'render_deploy_hook_credential_id', defaultValue: '', description: 'Optional Jenkins secret text credential ID for the Render deploy hook URL')
     }
 
+    triggers {
+        githubPush()
+        pollSCM('H/5 * * * *')
+    }
+
     environment {
         IMAGE_NAME = 'servpro-backend'
         IMAGE_TAG = 'latest'
