@@ -1,8 +1,9 @@
 const mockUse = jest.fn();
+const mockOptions = jest.fn();
 const mockJson = jest.fn(() => "json-middleware");
 
 // Mocking the Express app and its methods to test the app configuration without starting an actual server
-const mockExpress = jest.fn(() => ({ use: mockUse }));
+const mockExpress = jest.fn(() => ({ use: mockUse, options: mockOptions }));
 mockExpress.json = mockJson;
 
 // Mocking the database connection function to prevent actual database interactions during tests
@@ -37,6 +38,7 @@ describe("app configuration", () => {
   beforeEach(() => {
     jest.resetModules();
     mockUse.mockClear();
+    mockOptions.mockClear();
     mockJson.mockClear();
     mockExpress.mockClear();
   });
@@ -47,6 +49,7 @@ describe("app configuration", () => {
     expect(app).toBeDefined();
     expect(mockExpress).toHaveBeenCalledTimes(1);
     expect(mockJson).toHaveBeenCalledTimes(1);
+    expect(mockOptions).toHaveBeenCalledWith("*", "cors-middleware");
 
     expect(mockUse).toHaveBeenNthCalledWith(1, "cors-middleware");
     expect(mockUse).toHaveBeenNthCalledWith(2, "json-middleware");
