@@ -93,11 +93,11 @@ pipeline {
                             $ErrorActionPreference = "Stop"
 
                             function Invoke-Kubectl {
-                                param([string]$Args)
-                                Write-Host "> kubectl $Args"
-                                & kubectl $Args.Split(' ')
+                                param([string]$KubectlArgs)
+                                Write-Host "> kubectl $KubectlArgs"
+                                & kubectl @($KubectlArgs.Split(' '))
                                 if ($LASTEXITCODE -ne 0) {
-                                    throw "kubectl failed: kubectl $Args"
+                                    throw "kubectl failed: kubectl $KubectlArgs"
                                 }
                             }
 
@@ -116,7 +116,7 @@ pipeline {
 
                     if (params.KUBECONFIG_CREDENTIAL_ID?.trim()) {
                         withCredentials([file(credentialsId: params.KUBECONFIG_CREDENTIAL_ID.trim(), variable: 'KUBECONFIG_FILE')]) {
-                            withEnv(["KUBECONFIG=${env.KUBECONFIG_FILE}"]) {
+                            withEnv(['KUBECONFIG=' + env.KUBECONFIG_FILE]) {
                                 runDeploy()
                             }
                         }
