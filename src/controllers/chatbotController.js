@@ -4,9 +4,9 @@ const { asyncHandler } = require("../utils/asyncHandler");
 
 // Python AI service URL
 const defaultPythonAIService = process.env.RENDER
-  ? 'http://localhost:10000'
+  ? 'https://servpro-python-ai.onrender.com'
   : 'http://localhost:5000';
-const PYTHON_AI_SERVICE = process.env.PYTHON_AI_SERVICE || defaultPythonAIService;
+const PYTHON_AI_SERVICE = (process.env.PYTHON_AI_SERVICE || defaultPythonAIService).replace(/\/$/, '');
 
 // Get chatbot response with Python AI analysis
 const getChatbotResponse = asyncHandler(async (req, res) => {
