@@ -8,6 +8,65 @@ const defaultPythonAIService = process.env.RENDER
   : 'http://localhost:5000';
 const PYTHON_AI_SERVICE = (process.env.PYTHON_AI_SERVICE || defaultPythonAIService).replace(/\/$/, '');
 
+const toPositiveInt = (value, fallback) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const AI_REQUEST_TIMEOUT_MS = toPositiveInt(process.env.PYTHON_AI_TIMEOUT_MS, 12000);
+const AI_MAX_RETRIES = toPositiveInt(process.env.PYTHON_AI_RETRIES, 2);
+const AI_RETRY_BASE_DELAY_MS = toPositiveInt(process.env.PYTHON_AI_RETRY_BASE_DELAY_MS, 1500);
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetriableAiError = (error) => {
+  const networkCodes = new Set([
+    'ECONNABORTED',
+    'ECONNRESET',
+    'ECONNREFUSED',
+    'ETIMEDOUT',
+    'ENOTFOUND',
+    'EHOSTUNREACH'
+  ]);
+
+  if (networkCodes.has(error.code)) {
+    return true;
+  }
+
+  const status = error.response?.status;
+  return status === 429 || status >= 500;
+};
+
+const requestPythonAI = async ({ method = 'get', endpoint, data, timeoutMs = AI_REQUEST_TIMEOUT_MS, retries = AI_MAX_RETRIES }) => {
+  let lastError;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const effectiveTimeout = timeoutMs + (attempt * 3000);
+
+      const response = await axios({
+        method,
+        url: `${PYTHON_AI_SERVICE}${endpoint}`,
+        data,
+        timeout: effectiveTimeout
+      });
+
+      return response.data;
+    } catch (error) {
+      lastError = error;
+
+      if (attempt >= retries || !isRetriableAiError(error)) {
+        throw error;
+      }
+
+      const backoffDelay = AI_RETRY_BASE_DELAY_MS * (2 ** attempt);
+      await delay(backoffDelay);
+    }
+  }
+
+  throw lastError;
+};
+
 // Get chatbot response with Python AI analysis
 const getChatbotResponse = asyncHandler(async (req, res) => {
   const { message, language = 'en' } = req.body;
@@ -21,12 +80,14 @@ const getChatbotResponse = asyncHandler(async (req, res) => {
   let aiAnalysis;
   try {
     // Call Python AI service for NLP analysis
-    const aiResponse = await axios.post(`${PYTHON_AI_SERVICE}/recommend`, {
-      text: message,
-      language: language
-    }, { timeout: 5000 });
-
-    aiAnalysis = aiResponse.data;
+    aiAnalysis = await requestPythonAI({
+      method: 'post',
+      endpoint: '/recommend',
+      data: {
+        text: message,
+        language: language
+      }
+    });
   } catch (aiError) {
     console.error('Python AI service error:', aiError.message);
 
@@ -119,12 +180,16 @@ const analyzeChatbotInput = asyncHandler(async (req, res) => {
   }
 
   try {
-    const analysisResponse = await axios.post(`${PYTHON_AI_SERVICE}/analyze`, {
-      text: text,
-      language: language
-    }, { timeout: 5000 });
+    const analysisResponse = await requestPythonAI({
+      method: 'post',
+      endpoint: '/analyze',
+      data: {
+        text: text,
+        language: language
+      }
+    });
 
-    res.json(analysisResponse.data);
+    res.json(analysisResponse);
 
   } catch (error) {
     console.error('Analysis error:', error.message);
@@ -164,12 +229,17 @@ const getChatbotSuggestions = asyncHandler(async (req, res) => {
 // Health check for Python AI service
 const checkAIHealth = asyncHandler(async (req, res) => {
   try {
-    const healthResponse = await axios.get(`${PYTHON_AI_SERVICE}/health`, { timeout: 3000 });
+    const healthResponse = await requestPythonAI({
+      method: 'get',
+      endpoint: '/health',
+      timeoutMs: toPositiveInt(process.env.PYTHON_AI_HEALTH_TIMEOUT_MS, 5000),
+      retries: toPositiveInt(process.env.PYTHON_AI_HEALTH_RETRIES, 1)
+    });
     
     res.json({
       status: 'online',
       nodeBackend: 'online',
-      pythonAI: healthResponse.data,
+      pythonAI: healthResponse,
       timestamp: new Date()
     });
 
