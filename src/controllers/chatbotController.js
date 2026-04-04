@@ -3,7 +3,10 @@ const { Service } = require("../models/Service");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 // Python AI service URL
-const PYTHON_AI_SERVICE = process.env.PYTHON_AI_SERVICE || 'http://localhost:5000';
+const defaultPythonAIService = process.env.RENDER
+  ? 'http://localhost:10000'
+  : 'http://localhost:5000';
+const PYTHON_AI_SERVICE = process.env.PYTHON_AI_SERVICE || defaultPythonAIService;
 
 // Get chatbot response with Python AI analysis
 const getChatbotResponse = asyncHandler(async (req, res) => {
@@ -26,13 +29,22 @@ const getChatbotResponse = asyncHandler(async (req, res) => {
     aiAnalysis = aiResponse.data;
   } catch (aiError) {
     console.error('Python AI service error:', aiError.message);
-    const error = new Error(
-      language === 'ar' 
-        ? 'خدمة الذكاء الاصطناعي غير متاحة' 
-        : 'AI service is currently unavailable'
-    );
-    error.statusCode = 503;
-    throw error;
+
+    const fallbackMessage = language === 'ar'
+      ? 'خدمة الذكاء الاصطناعي غير متاحة حالياً. يمكنك طلب خدمة السباكة أو الكهرباء أو التكييف أو التنظيف وسنساعدك فوراً.'
+      : 'AI service is currently unavailable. You can still request plumbing, electrical, HVAC, or cleaning service and we will help you right away.';
+
+    return res.json({
+      message: fallbackMessage,
+      detectedService: null,
+      confidence: 0,
+      recommendedService: null,
+      aiModel: 'Fallback (AI offline)',
+      geminiUsed: false,
+      allScores: {},
+      degraded: true,
+      timestamp: new Date()
+    });
   }
 
   const { detected_service, confidence, recommendations } = aiAnalysis;
