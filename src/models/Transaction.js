@@ -24,6 +24,13 @@ const transactionSchema = new mongoose.Schema(
     provider: { type: String, default: "STRIPE" },
     externalId: { type: String },
     fees: { type: Number, default: 0 },
+    providerAmount: { type: Number, default: 0 },
+    providerPayoutStatus: {
+      type: String,
+      enum: ["PENDING", "PAID"],
+      default: "PENDING",
+    },
+    providerPaidAt: { type: Date },
     commission: { type: mongoose.Schema.Types.ObjectId, ref: "Commission" },
     invoice: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice" },
   },

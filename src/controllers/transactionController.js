@@ -1,26 +1,84 @@
 const{Transaction} = require("../models/Transaction");
+const { Booking } = require("../models/Booking");
+const { Commission } = require("../models/Commission");
 const { asyncHandler } = require("../utils/asyncHandler");
+
+const roundTo2 = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+const settleTransactionForProvider = async (transactionDoc) => {
+  if (transactionDoc?.status !== "SUCCESS") {
+    return;
+  }
+
+  // Idempotent behavior: do not recreate settlement if already marked as paid.
+  if (transactionDoc.providerPayoutStatus === "PAID") {
+    return;
+  }
+
+  const booking = await Booking.findById(transactionDoc.booking).select("_id provider").lean();
+  if (!booking?.provider) {
+    const error = new Error("Cannot settle transaction: booking/provider not found");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const configuredPercentage = Number(process.env.COMMISSION_PERCENTAGE ?? 10);
+  const percentage = Math.max(0, Math.min(configuredPercentage, 100));
+  const grossAmount = Number(transactionDoc.amount || 0);
+
+  let commissionDoc = null;
+  if (transactionDoc.commission) {
+    commissionDoc = await Commission.findById(transactionDoc.commission);
+  }
+
+  if (!commissionDoc) {
+    commissionDoc = await Commission.findOne({ booking: transactionDoc.booking });
+  }
+
+  if (!commissionDoc) {
+    commissionDoc = await Commission.create({
+      booking: transactionDoc.booking,
+      percentage,
+      amount: roundTo2(grossAmount * (percentage / 100)),
+    });
+  }
+
+  const commissionAmount = roundTo2(Number(commissionDoc.amount || 0));
+  const providerAmount = Math.max(0, roundTo2(grossAmount - commissionAmount));
+
+  transactionDoc.fees = commissionAmount;
+  transactionDoc.providerAmount = providerAmount;
+  transactionDoc.commission = commissionDoc._id;
+  transactionDoc.providerPayoutStatus = "PAID";
+  transactionDoc.providerPaidAt = new Date();
+};
 
 //Créer une nouvelle transaction
 const createTransaction = asyncHandler(async (req, res) => {
   const { booking, amount, currency, method, status } = req.body;
-    const transaction = await Transaction.create({
+  const transaction = await Transaction.create({
     booking,
     amount,
     currency,
     method: method || 'CASH',
     status,
   });
-    const populatedTransaction = await Transaction.findById(transaction._id)
-      .populate({
-        path: 'booking',
-        populate: [
-          { path: 'service', select: 'name' },
-          { path: 'provider', select: 'name' },
-          { path: 'client', select: 'name' }
-        ]
-      });
-    res.status(201).json(populatedTransaction);
+
+  if (transaction.status === "SUCCESS") {
+    await settleTransactionForProvider(transaction);
+    await transaction.save();
+  }
+
+  const populatedTransaction = await Transaction.findById(transaction._id)
+    .populate({
+      path: 'booking',
+      populate: [
+        { path: 'service', select: 'name' },
+        { path: 'provider', select: 'name' },
+        { path: 'client', select: 'name' }
+      ]
+    });
+  res.status(201).json(populatedTransaction);
 });
 
 //Obtenir une transaction par ID
@@ -47,23 +105,29 @@ const getTransactionById = asyncHandler(async (req, res) => {
 const updateTransactionStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) {
-      const error = new Error("Transaction not found");
-      error.statusCode = 404;
-      throw error;
-    }
-    transaction.status = status;
-    await transaction.save();
-    const updatedTransaction = await Transaction.findById(req.params.id)
-      .populate({
-        path: 'booking',
-        populate: [
-          { path: 'service', select: 'name' },
-          { path: 'provider', select: 'name' },
-          { path: 'client', select: 'name' }
-        ]
-      });
-    res.json(updatedTransaction);
+  if (!transaction) {
+    const error = new Error("Transaction not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  transaction.status = status;
+
+  if (status === "SUCCESS") {
+    await settleTransactionForProvider(transaction);
+  }
+
+  await transaction.save();
+  const updatedTransaction = await Transaction.findById(req.params.id)
+    .populate({
+      path: 'booking',
+      populate: [
+        { path: 'service', select: 'name' },
+        { path: 'provider', select: 'name' },
+        { path: 'client', select: 'name' }
+      ]
+    });
+  res.json(updatedTransaction);
 });
 
 //Supprimer une transaction

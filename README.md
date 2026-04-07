@@ -183,6 +183,31 @@ Content-Type: application/json
 }
 ```
 
+#### List Providers (Public)
+```http
+GET /auth/providers
+```
+
+Returns all users with role `PROVIDER` for frontend directory/portfolio browsing.
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "Provider Name",
+      "email": "provider@example.com",
+      "phone": "+21612345678",
+      "providerProfile": {
+        "companyName": "Company",
+        "verificationStatus": "VERIFIED"
+      }
+    }
+  ]
+}
+```
+
 ### Protected Endpoints
 
 All protected endpoints require an `Authorization` header:
@@ -198,6 +223,9 @@ Authorization: Bearer <your_jwt_token>
 | POST   | `/services`       | Yes           | PROVIDER, ADMIN        | Create service       |
 | PUT    | `/services/:id`   | Yes           | PROVIDER, ADMIN        | Update service       |
 | DELETE | `/services/:id`   | Yes           | PROVIDER, ADMIN        | Delete service       |
+
+Notes:
+- `GET /services` supports optional query filters: `category` and `providerId`.
 
 ### Bookings
 
@@ -311,6 +339,11 @@ npm test
 - **Commissions**: `/commissions` - Platform commissions (ADMIN only)
 - **Notations**: `/notations` - Provider ratings (ADMIN only)
 - **Reservation Details**: `/reservation-details` - Booking details
+
+Provider-oriented list endpoints support optional filter `providerId`:
+- `GET /portfolios?providerId=<providerId>`
+- `GET /certifications?providerId=<providerId>`
+- `GET /availability?providerId=<providerId>`
 
 ### Chatbot Endpoints
 
