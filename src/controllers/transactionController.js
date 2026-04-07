@@ -143,7 +143,21 @@ const deleteTransaction = asyncHandler(async (req, res) => {
 
 //Lister toutes les transactions
 const listTransactions = asyncHandler(async (req, res) => {
-  const transactions = await Transaction.find()
+  const query = {};
+  const userType = req.user?.type;
+  const userId = req.user?.id;
+
+  if (userType === "CLIENT" && userId) {
+    const bookingIds = await Booking.find({ client: userId }).distinct("_id");
+    query.booking = { $in: bookingIds };
+  }
+
+  if (userType === "PROVIDER" && userId) {
+    const bookingIds = await Booking.find({ provider: userId }).distinct("_id");
+    query.booking = { $in: bookingIds };
+  }
+
+  const transactions = await Transaction.find(query)
     .populate({
       path: 'booking',
       populate: [
