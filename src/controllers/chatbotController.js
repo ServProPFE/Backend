@@ -2,11 +2,20 @@ const axios = require('axios');
 const { Service } = require("../models/Service");
 const { asyncHandler } = require("../utils/asyncHandler");
 
-// Python AI service URL
-const defaultPythonAIService = process.env.RENDER
-  ? 'https://servpro-python-ai.onrender.com'
-  : 'http://localhost:5000';
-const PYTHON_AI_SERVICE = (process.env.PYTHON_AI_SERVICE || defaultPythonAIService).replace(/\/$/, '');
+const normalizeServiceUrl = (url) => (url || '').trim().replace(/\/$/, '');
+
+const configuredPythonAIService = (process.env.PYTHON_AI_SERVICE || '')
+  .split(',')
+  .map(normalizeServiceUrl)
+  .filter(Boolean);
+
+const defaultPythonAIServices = process.env.RENDER
+  ? ['https://servpro-python-ai.onrender.com']
+  : ['http://localhost:5000', 'https://servpro-python-ai.onrender.com'];
+
+const PYTHON_AI_SERVICES = Array.from(
+  new Set([...configuredPythonAIService, ...defaultPythonAIServices.map(normalizeServiceUrl)]),
+);
 
 const toPositiveInt = (value, fallback) => {
   const parsed = Number.parseInt(value, 10);
@@ -40,27 +49,29 @@ const isRetriableAiError = (error) => {
 const requestPythonAI = async ({ method = 'get', endpoint, data, timeoutMs = AI_REQUEST_TIMEOUT_MS, retries = AI_MAX_RETRIES }) => {
   let lastError;
 
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      const effectiveTimeout = timeoutMs + (attempt * 3000);
+  for (const serviceUrl of PYTHON_AI_SERVICES) {
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      try {
+        const effectiveTimeout = timeoutMs + (attempt * 3000);
 
-      const response = await axios({
-        method,
-        url: `${PYTHON_AI_SERVICE}${endpoint}`,
-        data,
-        timeout: effectiveTimeout
-      });
+        const response = await axios({
+          method,
+          url: `${serviceUrl}${endpoint}`,
+          data,
+          timeout: effectiveTimeout
+        });
 
-      return response.data;
-    } catch (error) {
-      lastError = error;
+        return response.data;
+      } catch (error) {
+        lastError = error;
 
-      if (attempt >= retries || !isRetriableAiError(error)) {
-        throw error;
+        if (attempt >= retries || !isRetriableAiError(error)) {
+          break;
+        }
+
+        const backoffDelay = AI_RETRY_BASE_DELAY_MS * (2 ** attempt);
+        await delay(backoffDelay);
       }
-
-      const backoffDelay = AI_RETRY_BASE_DELAY_MS * (2 ** attempt);
-      await delay(backoffDelay);
     }
   }
 
@@ -252,7 +263,7 @@ const checkAIHealth = asyncHandler(async (req, res) => {
       pythonAI: {
         status: 'offline',
         error: 'Python AI service is not responding',
-        url: PYTHON_AI_SERVICE
+        urls: PYTHON_AI_SERVICES
       },
       timestamp: new Date()
     });
