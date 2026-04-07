@@ -52,9 +52,16 @@ pipeline {
                 bat 'docker network create %CI_DOCKER_NETWORK%'
                 bat 'docker run -d --name %MONGO_CONTAINER_NAME% --network %CI_DOCKER_NETWORK% mongo:7'
                 bat 'powershell -NoProfile -Command "Start-Sleep -Seconds 10"'
-                bat 'docker run -d --name %CONTAINER_NAME% --network %CI_DOCKER_NETWORK% -e MONGODB_URI=mongodb://%MONGO_CONTAINER_NAME%:27017/servpro -e JWT_SECRET=ci-smoke-secret -p 4000:4000 %IMAGE_NAME%:%IMAGE_TAG%'
+                bat 'docker run -d --name %CONTAINER_NAME% --network %CI_DOCKER_NETWORK% -e MONGODB_URI=mongodb://%MONGO_CONTAINER_NAME%:27017/servpro -e JWT_SECRET=ci-smoke-secret -P %IMAGE_NAME%:%IMAGE_TAG%'
                 powershell '''
-                    $url = "http://localhost:4000/health"
+                    $portMapping = docker port ${env:CONTAINER_NAME} 4000/tcp
+                    if (-not $portMapping) {
+                        docker logs ${env:CONTAINER_NAME}
+                        throw "Could not determine mapped host port for container port 4000"
+                    }
+
+                    $hostPort = ($portMapping -split ':')[-1].Trim()
+                    $url = "http://localhost:$hostPort/health"
                     $maxAttempts = 12
                     $delaySeconds = 5
                     $ready = $false
