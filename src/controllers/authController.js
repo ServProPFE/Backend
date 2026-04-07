@@ -72,5 +72,15 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
+// Public endpoint to list all service providers for portfolio browsing
+const listProviders = asyncHandler(async (req, res) => {
+  const providers = await User.find({ type: "PROVIDER" })
+    .select("name email phone providerProfile")
+    .sort({ name: 1 })
+    .lean();
+
+  res.json({ items: providers });
+});
+
 //Exporter les contrôleurs
-module.exports = { register, login };
+module.exports = { register, login, listProviders };
