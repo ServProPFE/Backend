@@ -100,7 +100,7 @@ ServProBackend/
 
 6. **(Optional but recommended) Start Python AI service for chatbot**
   ```bash
-  cd python_ai
+  cd ../python_ai
   python -m pip install -r requirements.txt
   python app.py
   ```

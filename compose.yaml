@@ -27,9 +27,9 @@ services:
     command: >-
       sh -c "pip install --no-cache-dir -r requirements.txt && python app.py"
     env_file:
-      - ./python_ai/.env.example
+      - ../python_ai/.env.example
     volumes:
-      - ./python_ai:/app
+      - ../python_ai:/app
     ports:
       - "5000:5000"
     healthcheck:

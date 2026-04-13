@@ -49,7 +49,7 @@ Le service `backend` surcharge:
 - `PYTHON_AI_SERVICE=http://python-ai:5000`
 - `NODE_ENV=development`
 
-Le service `python-ai` charge `python_ai/.env.example`.
+Le service `python-ai` charge `../python_ai/.env.example`.
 
 ## Build image backend seule
 
