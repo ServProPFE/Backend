@@ -124,6 +124,18 @@ PYTHON_AI_SERVICE=http://localhost:5000
 GEMINI_API_KEY=your_api_key_optional
 ```
 
+Production (Render) example:
+
+```env
+NODE_ENV=production
+PYTHON_AI_SERVICE=https://chatbot-ai-smpu.onrender.com
+PYTHON_AI_TIMEOUT_MS=20000
+PYTHON_AI_RETRIES=3
+PYTHON_AI_RETRY_BASE_DELAY_MS=2000
+PYTHON_AI_HEALTH_TIMEOUT_MS=20000
+PYTHON_AI_HEALTH_RETRIES=3
+```
+
 ### Environment Variables
 
 | Variable        | Description                          | Default                           |
@@ -135,6 +147,23 @@ GEMINI_API_KEY=your_api_key_optional
 | `JWT_EXPIRES_IN` | Token expiration time              | `7d`                              |
 | `PYTHON_AI_SERVICE` | Python chatbot service base URL | `http://localhost:5000`          |
 | `GEMINI_API_KEY` | Optional fallback model API key for Python AI service | *Optional* |
+| `PYTHON_AI_TIMEOUT_MS` | Timeout for AI requests (ms) | `12000` |
+| `PYTHON_AI_RETRIES` | Retry attempts for AI requests | `2` |
+| `PYTHON_AI_RETRY_BASE_DELAY_MS` | Exponential backoff base delay (ms) | `1500` |
+| `PYTHON_AI_HEALTH_TIMEOUT_MS` | Timeout for `/chatbot/health` probe (ms) | `5000` |
+| `PYTHON_AI_HEALTH_RETRIES` | Retry attempts for health probe | `1` |
+
+### AI health diagnostics
+
+- `GET /chatbot/health` verifies Node backend and Python AI availability.
+- Status `online`: Python AI is reachable.
+- Status `degraded`: backend is up but Python AI is unavailable (chatbot falls back to static guidance message).
+
+Example:
+
+```http
+GET /chatbot/health
+```
 
 ## 📚 API Documentation
 
