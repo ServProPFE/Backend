@@ -10,8 +10,8 @@ const configuredPythonAIService = (process.env.PYTHON_AI_SERVICE || '')
   .filter(Boolean);
 
 const defaultPythonAIServices = process.env.RENDER
-  ? ['https://servpro-python-ai.onrender.com']
-  : ['http://localhost:5000', 'https://servpro-python-ai.onrender.com'];
+  ? ['https://chatbot-ai-smpu.onrender.com']
+  : ['http://localhost:5000'];
 
 const PYTHON_AI_SERVICES = Array.from(
   new Set([...configuredPythonAIService, ...defaultPythonAIServices.map(normalizeServiceUrl)]),
@@ -47,6 +47,10 @@ const isRetriableAiError = (error) => {
 };
 
 const requestPythonAI = async ({ method = 'get', endpoint, data, timeoutMs = AI_REQUEST_TIMEOUT_MS, retries = AI_MAX_RETRIES }) => {
+  if (PYTHON_AI_SERVICES.length === 0) {
+    throw new Error('No PYTHON_AI_SERVICE endpoint configured');
+  }
+
   let lastError;
 
   for (const serviceUrl of PYTHON_AI_SERVICES) {
