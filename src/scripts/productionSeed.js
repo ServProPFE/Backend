@@ -71,6 +71,25 @@ const seedProviders = [
   },
 ];
 
+const providerProfileDefaults = {
+  "hassan@provider.com": {
+    location: "Tunis",
+    turnover: "120k TND/year",
+  },
+  "karim@provider.com": {
+    location: "Sfax",
+    turnover: "180k TND/year",
+  },
+  "salah@provider.com": {
+    location: "Sousse",
+    turnover: "150k TND/year",
+  },
+  "amira@provider.com": {
+    location: "Bizerte",
+    turnover: "95k TND/year",
+  },
+};
+
 const seedAdmin = {
   type: "ADMIN",
   name: "Admin User",
@@ -292,6 +311,37 @@ const resolveProductionSeedPassword = () => {
   return process.env.PRODUCTION_SEED_DEFAULT_PASSWORD || process.env.JWT_SECRET || process.env.PRODUCTION_SEED_PASSWORD || process.env.MONGODB_URI || "";
 };
 
+const backfillProviderProfileDefaults = async (providerMap) => {
+  let providersUpdated = 0;
+
+  for (const [email, defaults] of Object.entries(providerProfileDefaults)) {
+    const provider = providerMap[email] || await User.findOne({ email });
+    if (!provider) {
+      continue;
+    }
+
+    const profile = provider.providerProfile || {};
+    const nextProfile = {
+      ...profile,
+      location: profile.location || defaults.location,
+      turnover: profile.turnover || defaults.turnover,
+    };
+
+    const profileChanged = nextProfile.location !== profile.location || nextProfile.turnover !== profile.turnover;
+    if (!profileChanged) {
+      continue;
+    }
+
+    await User.updateOne(
+      { _id: provider._id },
+      { $set: { providerProfile: nextProfile } },
+    );
+    providersUpdated += 1;
+  }
+
+  return providersUpdated;
+};
+
 const ensureProductionSeedData = async () => {
   if (!shouldRunProductionSeed()) {
     return { seeded: false, reason: "disabled" };
@@ -325,9 +375,10 @@ const ensureProductionSeedData = async () => {
   const servicesCreated = await seedProviderServices(providerMap);
   const portfoliosCreated = await seedProviderPortfolios(providerMap);
   const availabilityCreated = await seedProviderAvailability(providerMap);
+  const providersUpdated = await backfillProviderProfileDefaults(providerMap);
 
-  console.log(`[production-seed] usersCreated=${usersCreated}, servicesCreated=${servicesCreated}, portfoliosCreated=${portfoliosCreated}, availabilityCreated=${availabilityCreated}`);
-  return { seeded: true, usersCreated, servicesCreated, portfoliosCreated, availabilityCreated };
+  console.log(`[production-seed] usersCreated=${usersCreated}, servicesCreated=${servicesCreated}, portfoliosCreated=${portfoliosCreated}, availabilityCreated=${availabilityCreated}, providersUpdated=${providersUpdated}`);
+  return { seeded: true, usersCreated, servicesCreated, portfoliosCreated, availabilityCreated, providersUpdated };
 };
 
 module.exports = {
