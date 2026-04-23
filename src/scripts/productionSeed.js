@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const { User } = require("../models/User");
 const { Service } = require("../models/Service");
 const { Portfolio } = require("../models/Portfolio");
+const { Availability } = require("../models/Availability");
 
 const seedProviders = [
   {
@@ -140,6 +141,25 @@ const providerPortfolios = {
   },
 };
 
+const providerAvailability = {
+  "hassan@provider.com": [
+    { day: 1, start: "08:00", end: "17:00" },
+    { day: 3, start: "09:00", end: "18:00" },
+  ],
+  "karim@provider.com": [
+    { day: 2, start: "08:30", end: "16:30" },
+    { day: 4, start: "10:00", end: "19:00" },
+  ],
+  "salah@provider.com": [
+    { day: 1, start: "09:00", end: "17:30" },
+    { day: 5, start: "08:00", end: "14:00" },
+  ],
+  "amira@provider.com": [
+    { day: 0, start: "08:00", end: "13:00" },
+    { day: 6, start: "08:00", end: "15:00" },
+  ],
+};
+
 const isTruthy = (value) => ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
 
 const shouldRunProductionSeed = () => {
@@ -191,6 +211,25 @@ const ensurePortfolio = async (providerId, portfolioDef) => {
   return true;
 };
 
+const ensureAvailability = async (providerId, availabilityDef) => {
+  const existing = await Availability.findOne({
+    provider: providerId,
+    day: availabilityDef.day,
+    start: availabilityDef.start,
+    end: availabilityDef.end,
+  }).lean();
+
+  if (existing) {
+    return false;
+  }
+
+  await Availability.create({
+    ...availabilityDef,
+    provider: providerId,
+  });
+  return true;
+};
+
 const seedProviderServices = async (providerMap) => {
   let servicesCreated = 0;
 
@@ -229,6 +268,26 @@ const seedProviderPortfolios = async (providerMap) => {
   return portfoliosCreated;
 };
 
+const seedProviderAvailability = async (providerMap) => {
+  let availabilityCreated = 0;
+
+  for (const [email, slots] of Object.entries(providerAvailability)) {
+    const provider = providerMap[email] || await User.findOne({ email }).lean();
+    if (!provider?._id) {
+      continue;
+    }
+
+    for (const slot of slots) {
+      const created = await ensureAvailability(provider._id, slot);
+      if (created) {
+        availabilityCreated += 1;
+      }
+    }
+  }
+
+  return availabilityCreated;
+};
+
 const resolveProductionSeedPassword = () => {
   return process.env.PRODUCTION_SEED_DEFAULT_PASSWORD || process.env.JWT_SECRET || process.env.PRODUCTION_SEED_PASSWORD || process.env.MONGODB_URI || "";
 };
@@ -265,9 +324,10 @@ const ensureProductionSeedData = async () => {
 
   const servicesCreated = await seedProviderServices(providerMap);
   const portfoliosCreated = await seedProviderPortfolios(providerMap);
+  const availabilityCreated = await seedProviderAvailability(providerMap);
 
-  console.log(`[production-seed] usersCreated=${usersCreated}, servicesCreated=${servicesCreated}, portfoliosCreated=${portfoliosCreated}`);
-  return { seeded: true, usersCreated, servicesCreated, portfoliosCreated };
+  console.log(`[production-seed] usersCreated=${usersCreated}, servicesCreated=${servicesCreated}, portfoliosCreated=${portfoliosCreated}, availabilityCreated=${availabilityCreated}`);
+  return { seeded: true, usersCreated, servicesCreated, portfoliosCreated, availabilityCreated };
 };
 
 module.exports = {
