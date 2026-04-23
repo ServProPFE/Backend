@@ -124,7 +124,7 @@ const providerPortfolios = {
       "https://images.unsplash.com/photo-1621905252472-e8f0fcf8f1b5",
     ],
     certificates: [
-      "https://images.unsplash.com/photo-1584697964192-8f24c9d4a5c8",
+      "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
     ],
     description: "Full replacement of damaged kitchen piping with leak-proof fittings.",
   },
@@ -134,7 +134,7 @@ const providerPortfolios = {
       "https://images.unsplash.com/photo-1621905251918-48416bd8575a",
     ],
     certificates: [
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3",
+      "https://www.orimi.com/pdf-test.pdf",
     ],
     description: "Modernized circuit breakers and rewiring for improved electrical safety.",
   },
@@ -144,7 +144,7 @@ const providerPortfolios = {
       "https://images.unsplash.com/photo-1581579186986-5a1863af95aa",
     ],
     certificates: [
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d",
+      "https://www.africau.edu/images/default/sample.pdf",
     ],
     description: "Installed and calibrated split AC unit with optimized airflow routing.",
   },
@@ -154,7 +154,7 @@ const providerPortfolios = {
       "https://images.unsplash.com/photo-1585421514738-01798e348b17",
     ],
     certificates: [
-      "https://images.unsplash.com/photo-1450101499163-c8848c66ca85",
+      "https://www.clickdimensions.com/links/TestPDFfile.pdf",
     ],
     description: "Detailed dust extraction, floor sanitization, and glass polishing.",
   },
