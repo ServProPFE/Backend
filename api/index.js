@@ -1,5 +1,6 @@
 require("dotenv").config();
 const axios = require("axios");
+const { injectSpeedInsights } = require("@vercel/speed-insights");
 
 const { app } = require("../src/app");
 const { connectDb } = require("../src/config/db");
@@ -56,6 +57,9 @@ const applyCorsHeaders = (req, res) => {
 
 let dbConnectionPromise = null;
 let aiWarmupDone = false;
+
+// Initialize Vercel Speed Insights
+injectSpeedInsights();
 
 async function bootstrapIfNeeded() {
   if (dbConnectionPromise) {
