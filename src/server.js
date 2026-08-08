@@ -3,6 +3,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { ensureProductionSeedData } = require("./scripts/productionSeed");
 const RealtimeServer = require("./services/realtimeServer");
+const { injectSpeedInsights } = require("@vercel/speed-insights");
 
 //Importer l'application Express et la fonction de connexion à la base de données
 const { app } = require("./app");
@@ -44,6 +45,9 @@ const startServer = async () => {
   if (!mongoUri) {
     throw new Error("MONGODB_URI is required");
   }
+
+  // Initialize Vercel Speed Insights
+  injectSpeedInsights();
 
   await connectDb(mongoUri);
   await ensureProductionSeedData();
